@@ -6,6 +6,8 @@ struct Props{
     path: std::path::PathBuf,
 }
 
+
+
 fn main() {
     let args = Props::parse();
     let bytes = std::fs::read(&args.path);
