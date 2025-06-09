@@ -3,6 +3,8 @@ use ed25519_dalek::SigningKey;
 use ed25519_dalek::{Signature, Signer};
 use ed25519_dalek::{VerifyingKey, Verifier};
 use rand::prelude::*;
+use rand::rngs::OsRng;
+
 
 #[derive(Parser, Debug)]
 #[command(about = "Sign or verify firmware blobs using Ed25519", author, version)]
@@ -26,7 +28,7 @@ struct Props {
     keypath: Option<std::path::PathBuf>,
 
     #[clap(long, help="Path to store Signature (for verification mode)")]
-    signaturepath: Option<std::path::PathBuf>
+    signature_path: Option<std::path::PathBuf>
 }
 
 fn main() {
@@ -91,7 +93,7 @@ fn main() {
                 .expect(&format!("Failed to read firmware binary from {:?}", binary_path));
 
             // Fallback for missing signature path: provide error and exit
-            let signature_path = if let Some(p) = args.signaturepath {
+            let signature_path = if let Some(p) = args.signature_path {
                 p
             } else {
                 eprintln!("Error: Signature path is required for verification (--signaturepath)");
@@ -122,12 +124,25 @@ pub struct ReturnKeypair {
     pub signing_key: SigningKey,
 }
 
-//add storing logic into genkeypair
 fn generate_key_pair() -> SigningKey {
-let mut rng = rand::rng();
-    let bytestream:[u8; 32]=rng.random();        
-    let signing_key = SigningKey::from_bytes(&bytestream);
-    print!("done deal"); //remove it in post
+    let mut rng = OsRng;
+
+    let signing_key = SigningKey::generate(&mut rng);
+
+    let public_key = signing_key.verifying_key();
+
+    let private_key_filename = "signing_key.bin";
+    let public_key_filename = "public_key.bin";
+
+    match std::fs::write(private_key_filename, signing_key.to_bytes()) {
+        Ok(_) => println!("Private signing key saved to: {}", private_key_filename),
+        Err(e) => eprintln!("Error saving private key to {}: {}", private_key_filename, e),
+    }
+    match std::fs::write(public_key_filename, public_key.to_bytes()) {
+        Ok(_) => println!("Public key saved to: {}", public_key_filename),
+        Err(e) => eprintln!("Error saving public key to {}: {}", public_key_filename, e),
+    }
+
     return signing_key;
 }
 

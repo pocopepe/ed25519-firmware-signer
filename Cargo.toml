@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 clap = { version = "4.5.39", features = ["derive"] }
-ed25519-dalek = "2.1.1"
-rand = "0.9.1"
+ed25519-dalek = { version = "2.1.1", features = ["rand_core"] }
 hex = "0.4"
+rand = "0.8.5"
 
