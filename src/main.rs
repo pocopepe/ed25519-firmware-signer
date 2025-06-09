@@ -22,13 +22,12 @@ struct Props {
     #[clap(short = 'g', long, help = "Generate a new key pair")]
     gen_keys: bool,
 
-    #[clap(long, help="Path to store Keys")]
+    #[clap(long, help="Path to store Keys (for public key in verify mode)")]
     keypath: Option<std::path::PathBuf>,
 
-    #[clap(long, help="Path to store Keys")]
+    #[clap(long, help="Path to store Signature (for verification mode)")]
     signaturepath: Option<std::path::PathBuf>
 }
-
 
 fn main() {
     let args = Props::parse();
