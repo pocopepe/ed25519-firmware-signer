@@ -1,5 +1,5 @@
 [package]
-name = "fwsign"
+name = "binsign"
 version = "0.1.0"
 edition = "2024"
 authors = ["pocopepe <avijusanjai@gmail.com>"]
