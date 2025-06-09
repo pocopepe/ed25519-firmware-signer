@@ -1,0 +1,1 @@
+cargo run --features test_mode -- -g test --name test0 //for testing mode

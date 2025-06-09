@@ -6,7 +6,7 @@ use rand::rngs::OsRng;
 use std::path::{Path, PathBuf};
 use std::io::{self, Write};
 
-#[cfg(feature = "test_mode")] // This subcommand is only available when the 'test_mode' feature is enabled
+#[cfg(feature = "test_mode")]
 use clap::Subcommand;
 
 #[derive(Parser, Debug)]
@@ -33,52 +33,38 @@ struct Props {
     #[clap(long, help="Path to store Signature (for verification mode)")]
     signature_path: Option<std::path::PathBuf>, 
     
-    // START: Subcommand for test mode
-    #[cfg(feature = "test_mode")] // This subcommand is only available when the 'test_mode' feature is enabled
+    #[cfg(feature = "test_mode")] 
     #[clap(subcommand)]
     command: Option<TestCommand>,
-    // END: Subcommand for test mode
 }
 
-// START: New enum for test subcommand
-#[cfg(feature = "test_mode")] // This enum is only compiled if 'test_mode' feature is enabled
+#[cfg(feature = "test_mode")]
 #[derive(Subcommand, Debug)]
 enum TestCommand {
-    /// Enables testing mode for a specific test scenario (e.g., 'test0', 'test1')
     Test {
-        /// The name of the test folder within the default 'test/' directory (e.g., 'test0')
         #[clap(long)]
-        name: String,
+        t: String,
     },
 }
-// END: New enum for test subcommand
 
 
 fn main() {
     let args = Props::parse();
 
-    // START: Base directory determination now includes test subcommand logic
     let base_dir: PathBuf = {
         #[cfg(feature = "test_mode")]
         {
             if let Some(TestCommand::Test { name }) = args.command {
-                // If 'test' subcommand is used, construct path like 'test/<name>'
                 PathBuf::from("test").join(name)
             } else {
-                // If test_mode feature is enabled but no 'test' subcommand, default to current directory
                 std::env::current_dir().expect("Failed to get current working directory")
             }
         }
         #[cfg(not(feature = "test_mode"))]
         {
-            // If test_mode feature is NOT enabled, always use the current directory
             std::env::current_dir().expect("Failed to get current working directory")
         }
     };
-    // END: Base directory determination
-
-    // The rest of your main function remains the same, as `base_dir` handles the root path.
-    // All subsequent file operations will correctly use this `base_dir`.
 
     //sign logic
     if args.sign {
