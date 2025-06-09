@@ -2,6 +2,8 @@ use clap::Parser;
 use ed25519_dalek::SigningKey;
 use ed25519_dalek::{Signature, Signer};
 use ed25519_dalek::{VerifyingKey, Verifier};
+use rand::prelude::*;
+
 
 
 
@@ -41,7 +43,8 @@ pub struct ReturnKeypair {
 
 
 fn generate_key_pair(message: &[u8]) -> ReturnKeypair {
-    let bytestream: [u8; 32] = [1, 2, 3, 4, 1, 2, 3, 4,1, 2, 3, 4, 1, 2, 3, 4,1, 2, 3, 4, 1, 2, 3, 4,1, 2, 3, 4, 1, 2, 3, 4];
+let mut rng = rand::rng();
+    let bytestream:[u8; 32]=rng.random();        
     let signing_key = SigningKey::from_bytes(&bytestream);
     let signature = signing_key.sign(message);
     ReturnKeypair {signature,signing_key,}
