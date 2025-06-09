@@ -33,7 +33,6 @@ struct Props {
     #[clap(long, help="Path to store Signature (for verification mode)")]
     signature_path: Option<std::path::PathBuf>,
 
-    // This field, and its associated logic, will only be included in test builds.
     #[cfg(test)]
     #[clap(subcommand)]
     command: Option<TestCommand>,
