@@ -42,7 +42,6 @@ fn main() {
     } else {
         generate_key_pair()
     };
-
     match bytes {
         Ok(data) => {
             let signature: Signature=sign(&data, keys.clone());
@@ -52,6 +51,7 @@ fn main() {
             eprintln!("Error reading file: {}", e);
         }
     }
+
     if args.gen_keys{
         generate_key_pair();
     }
@@ -81,7 +81,6 @@ pub struct ReturnKeypair {
     pub signature: Signature,
     pub signing_key: SigningKey,
 }
-
 
 //add storing logic into genkeypair
 fn generate_key_pair() -> SigningKey {
