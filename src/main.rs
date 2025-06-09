@@ -4,15 +4,19 @@ use ed25519_dalek::{Signature, Signer};
 use ed25519_dalek::{VerifyingKey, Verifier};
 use rand::prelude::*;
 
-
-
-
-
 #[derive(Parser, Debug)]
-struct Props{
-    #[clap(long)]
-path: Option<std::path::PathBuf>,
+#[command(about = "Sign or verify firmware blobs using Ed25519", author, version)]
+struct Props {
+    #[clap(long, help = "Path to firmware binary")]
+    path: Option<std::path::PathBuf>,
+
+    #[clap(long, help = "Path to private key for signing")]
+    key: Option<std::path::PathBuf>,
+
+    #[clap(long, help = "Sign or verify")]
+    mode: String, // e.g., "sign" or "verify"
 }
+
 
 fn main() {
     let args = Props::parse();
@@ -28,8 +32,6 @@ fn main() {
         Ok(data) => {
             let signature: Signature=sign(&data, keys.clone());
             verifier(signature, &data, keys);
-            println!("{:?}", signature);
-
         }
         Err(e) => {
             eprintln!("Error reading file: {}", e);
