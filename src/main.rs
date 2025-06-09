@@ -25,9 +25,6 @@ fn main() {
     let bytes = std::fs::read(&path);
     let keys=generate_key_pair();
 
-    
-
-
     match bytes {
         Ok(data) => {
             let signature: Signature=sign(&data, keys.clone());
