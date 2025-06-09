@@ -31,27 +31,27 @@ To build and install `ed25519-firmware-signer`, you'll need the [Rust programmin
     cargo build --release
     ```
 
-    The compiled executable will be located at `target/release/fwsign`.
+    The compiled executable will be located at `target/release/binsign`.
 
 3.  **Adding to PATH (Linux):**
-    For system-wide access, you can move the `fwsign` executable to a directory already included in your system's `PATH`, such as `/usr/local/bin`.
+    For system-wide access, you can move the `binsign` executable to a directory already included in your system's `PATH`, such as `/usr/local/bin`.
 
     ```bash
-    sudo mv target/release/fwsign /usr/local/bin/
+    sudo mv target/release/binsign /usr/local/bin/
     ```
 
-    After moving, you should be able to run `fwsign` from any directory in your terminal. You can test this by typing `fwsign --help`.
+    After moving, you should be able to run `binsign` from any directory in your terminal. You can test this by typing `binsign --help`.
 
 -----
 
 ## Usage
 
-`fwsign` is a command-line tool with distinct operations (key generation, signing, verification) and arguments.
+`binsign` is a command-line tool with distinct operations (key generation, signing, verification) and arguments.
 
 ### General Command Structure
 
 ```bash
-fwsign [OPERATION_OPTIONS] [TEST_MODE_COMMAND]
+binsign [OPERATION_OPTIONS] [TEST_MODE_COMMAND]
 ```
 
 ### Operations
@@ -62,7 +62,7 @@ fwsign [OPERATION_OPTIONS] [TEST_MODE_COMMAND]
 
 ### Default File Locations
 
-Unless explicitly specified with `--path`, `--key`, `--keypath`, or `--signature_path`, `fwsign` looks for or saves files in the **current working directory**. If **test mode** is active, these defaults are relative to the specified test subdirectory.
+Unless explicitly specified with `--path`, `--key`, `--keypath`, or `--signature_path`, `binsign` looks for or saves files in the **current working directory**. If **test mode** is active, these defaults are relative to the specified test subdirectory.
 
   * **Private Key:** `signing_key.bin`
   * **Public Key:** `public_key.bin`
@@ -84,7 +84,7 @@ Generates a new `signing_key.bin` (private) and `public_key.bin` in the base dir
 
 ```bash
 # Generate keys in the current directory
-fwsign -g
+binsign -g
 
 # Generate keys within 'test/test0' (requires test_mode feature)
 # The 't' is an alias for 'test' subcommand.
@@ -110,7 +110,7 @@ Signs a firmware binary using a private key and outputs a signature file.
 ```bash
 # Sign 'my_firmware.bin' in the current directory
 # Requires 'signing_key.bin' to exist in the current directory or be automatically generated.
-fwsign -s --path my_firmware.bin
+binsign -s --path my_firmware.bin
 
 # Sign 'test.bin' within 'test/test0' using keys in that directory (requires test_mode feature)
 # Assumes 'test/test0/test.bin' and 'test/test0/signing_key.bin' exist or will be generated.
@@ -137,7 +137,7 @@ Verifies a firmware binary against its signature and a public key.
 
 ```bash
 # Verify 'my_firmware.bin' with 'firmware.sig' and 'public_key.bin' in the current directory
-fwsign -v --path my_firmware.bin --signature_path firmware.sig
+binsign -v --path my_firmware.bin --signature_path firmware.sig
 
 # Verify 'test.bin' within 'test/test0' (requires test_mode feature)
 # Assumes 'test/test0/test.bin', 'test/test0/firmware.sig', and 'test/test0/public_key.bin' exist.
@@ -151,7 +151,7 @@ cargo run --features test_mode -- -v t test0
 The `test_mode` feature (enabled during compilation via `cargo run --features test_mode` or `cargo build --features test_mode`) provides a convenient way to manage test scenarios. It sets the base directory for all file operations (keys, firmware, signatures) to `test/<folder_name>`.
 
   * **Activation:** Activated by adding `test <folder_name>` or its alias `t <folder_name>` after your main operation flag (`-g`, `-s`, `-v`).
-  * **Default Binary Name:** When in test mode and signing (`-s`) or verifying (`-v`), if `--path` is omitted, `fwsign` will default to using `test.bin` inside the specified test folder.
+  * **Default Binary Name:** When in test mode and signing (`-s`) or verifying (`-v`), if `--path` is omitted, `binsign` will default to using `test.bin` inside the specified test folder.
   * **Implicit Key/Signature Paths:** Key files (`signing_key.bin`, `public_key.bin`) and signature files (`firmware.sig`) are also sought/saved within the specified `test/<folder_name>` directory.
 
 **Example Usage (as shown above):**
