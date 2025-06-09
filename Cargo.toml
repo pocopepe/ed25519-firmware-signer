@@ -2,14 +2,6 @@
 name = "fwsign"
 version = "0.1.0"
 edition = "2024"
-authors = ["pocopepe avijusanjai@gmail.com"]
-description = "A command-line tool for signing firmware or other data using Ed25519."
-readme = "README.md"
-homepage = "https://github.com/pocopepe/ed25519-firmware-signer"
-repository = "https://github.com/pocopepe/ed25519-firmware-signer"
-license = "MIT"
-keywords = ["firmware", "signing", "cryptography", "ed25519", "cli"]
-categories = ["command-line-utilities", "cryptography::cryptosystems"]
 
 [dependencies]
 clap = { version = "4.5.39", features = ["derive"] }
@@ -19,3 +11,4 @@ rand = "0.8.5"
 
 [features]
 default=[]
+test_mode=[]
