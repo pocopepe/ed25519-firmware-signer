@@ -70,9 +70,6 @@ fn main() {
         print!("Exec Sucess\n");
     }
 
-
-    //verify logic
-    // Verify logic
     // Verify logic
     else if args.verify {
         let public_key_path = if let Some(p) = args.keypath {
