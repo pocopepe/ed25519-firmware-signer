@@ -21,6 +21,9 @@ struct Props {
 
     #[clap(short = 'g', long, help = "Generate a new key pair")]
     gen_keys: bool,
+
+    #[clap(long, help="Path to store Keys")]
+    keypath: Option<std::path::PathBuf>
 }
 
 
@@ -47,6 +50,7 @@ fn main() {
         }
     }
 }
+
 pub struct ReturnKeypair {
     pub signature: Signature,
     pub signing_key: SigningKey,
