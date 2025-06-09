@@ -36,7 +36,6 @@ fn main() {
 
     //sign logic
         if args.sign {
-        // Firmware binary path is always required for signing
         let binary_path = args.path.unwrap_or_else(|| {
             eprintln!("Error: Firmware binary path is required for signing (--path)");
             std::process::exit(1);
@@ -45,14 +44,11 @@ fn main() {
             .expect(&format!("Failed to read firmware binary from {:?}", binary_path));
 
         let signing_key = if let Some(key_path) = args.key.as_deref() {
-            // User explicitly provided a key path, so use that
             let bytes = std::fs::read(key_path).expect("Failed to read key file");
             SigningKey::from_bytes(&bytes.try_into().expect("Invalid key length (expected 32 bytes)"))
         } else {
-            // No key path provided, check for existing 'signing_key.bin'
             let default_private_key_path = Path::new("signing_key.bin");
             if default_private_key_path.exists() {
-                // If 'signing_key.bin' exists, use it
                 let bytes = std::fs::read(default_private_key_path)
                     .expect(&format!("Failed to read private key from {:?}", default_private_key_path));
                 SigningKey::from_bytes(&bytes.try_into().expect("Invalid key length (expected 32 bytes)"))
