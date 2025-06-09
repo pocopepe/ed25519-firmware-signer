@@ -208,7 +208,7 @@ fn main() {
     }
 
     else {
-        eprintln!("No operation specified. Use --sign, --verify, or --gen-keys.");
+        eprintln!("No operation specified.");
         eprintln!("For help, use: {} --help", env!("CARGO_PKG_NAME"));
         std::process::exit(1);
     }
@@ -239,7 +239,7 @@ fn generate_key_pair_in_dir(output_dir: &Path) -> SigningKey {
 
 fn sign(message: &[u8], signing_key:SigningKey)->Signature{
     let signature = signing_key.sign(message);
-    signature 
+    signature
 }
 
 fn verifier(signature:Signature, message:&[u8], verifying_key:VerifyingKey){
