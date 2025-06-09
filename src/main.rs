@@ -8,26 +8,30 @@ use ed25519_dalek::{VerifyingKey, Verifier};
 
 #[derive(Parser, Debug)]
 struct Props{
-    path: std::path::PathBuf,
+    #[clap(long)]
+path: Option<std::path::PathBuf>,
 }
 
 fn main() {
-    // let args = Props::parse();
-    // let bytes = std::fs::read(&args.path);
-    let message:&[u8] = b"This is a test of the tsunami alert system.";
+    let args = Props::parse();
+    let path = args.path.unwrap_or_else(|| "./test.bin".into());
 
-    let temp=generate_key_pair(message);
-    verifier(temp.signature, message, temp.signing_key);
+    let bytes = std::fs::read(&path);
+
     
 
 
-    // match bytes {
-    //     Ok(_data) => {
-    //     }
-    //     Err(e) => {
-    //         eprintln!("Error reading file: {}", e);
-    //     }
-    // }
+    match bytes {
+        Ok(data) => {
+            let temp=generate_key_pair(&data);
+            verifier(temp.signature, &data, temp.signing_key);
+
+
+        }
+        Err(e) => {
+            eprintln!("Error reading file: {}", e);
+        }
+    }
 }
 pub struct ReturnKeypair {
     pub signature: Signature,
