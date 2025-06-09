@@ -6,6 +6,8 @@ use rand::rngs::OsRng;
 use std::path::{Path, PathBuf};
 use std::io::{self, Write};
 
+#[cfg(feature = "test_mode")] // This subcommand is only available when the 'test_mode' feature is enabled
+use clap::Subcommand;
 
 #[derive(Parser, Debug)]
 #[command(about = "Sign or verify firmware blobs using Ed25519", author, version)]
