@@ -1,4 +1,4 @@
-use clap::Parser; 
+use clap::Parser;
 use ed25519_dalek::SigningKey;
 use ed25519_dalek::{Signature, Signer};
 use ed25519_dalek::{VerifyingKey, Verifier};
@@ -6,7 +6,7 @@ use rand::rngs::OsRng;
 use std::path::{Path, PathBuf};
 use std::io::{self, Write};
 
-#[cfg(feature = "test_mode")]
+#[cfg(test)]
 use clap::Subcommand;
 
 #[derive(Parser, Debug)]
@@ -31,14 +31,15 @@ struct Props {
     keypath: Option<std::path::PathBuf>,
 
     #[clap(long, help="Path to store Signature (for verification mode)")]
-    signature_path: Option<std::path::PathBuf>, 
-    
-    #[cfg(feature = "test_mode")] 
+    signature_path: Option<std::path::PathBuf>,
+
+    // This field, and its associated logic, will only be included in test builds.
+    #[cfg(test)]
     #[clap(subcommand)]
     command: Option<TestCommand>,
 }
 
-#[cfg(feature = "test_mode")]
+#[cfg(test)]
 #[derive(Subcommand, Debug)]
 enum TestCommand {
     Test {
@@ -52,30 +53,33 @@ fn main() {
     let args = Props::parse();
 
     let base_dir: PathBuf = {
-        #[cfg(feature = "test_mode")]
+        #[cfg(test)]
         {
-            if let Some(TestCommand::Test { name }) = args.command {
-                PathBuf::from("test").join(name)
+            if let Some(TestCommand::Test { t }) = &args.command {
+                PathBuf::from("test").join(t)
             } else {
                 std::env::current_dir().expect("Failed to get current working directory")
             }
         }
-        #[cfg(not(feature = "test_mode"))]
+        // In non-test (production) mode, always use the current working directory.
+        #[cfg(not(test))]
         {
             std::env::current_dir().expect("Failed to get current working directory")
         }
     };
 
-    //sign logic
+    // Sign logic
     if args.sign {
         let binary_path = if let Some(p) = args.path {
             base_dir.join(p)
         } else {
-            #[cfg(feature = "test_mode")]
+            // In test mode, provide a default binary path for convenience.
+            #[cfg(test)]
             {
-                base_dir.join("test.bin") // Default binary name in test mode
+                base_dir.join("test.bin")
             }
-            #[cfg(not(feature = "test_mode"))]
+            // In non-test mode, require the path argument.
+            #[cfg(not(test))]
             {
                 eprintln!("Error: Firmware binary path is required for signing (--path)");
                 std::process::exit(1);
@@ -94,6 +98,7 @@ fn main() {
                     .expect(&format!("Failed to read private key from {:?}", default_private_key_path));
                 SigningKey::from_bytes(&bytes.try_into().expect("Invalid key length (expected 32 bytes)"))
             } else {
+                // If no key path is given and default doesn't exist, generate a new one.
                 generate_key_pair_in_dir(&base_dir)
             }
         };
@@ -128,15 +133,17 @@ fn main() {
             .expect(&format!("Failed to read public key from {:?}", public_key_path));
         let verifying_key = VerifyingKey::from_bytes(&public_key_bytes.try_into().expect("Invalid public key length (expected 32 bytes)"))
             .expect("Failed to create VerifyingKey from bytes");
-        
+
         let binary_path = if let Some(p) = args.path {
             base_dir.join(p)
         } else {
-            #[cfg(feature = "test_mode")]
+            // In test mode, provide a default binary path for convenience.
+            #[cfg(test)]
             {
                 base_dir.join("test.bin")
             }
-            #[cfg(not(feature = "test_mode"))]
+            // In non-test mode, require the path argument.
+            #[cfg(not(test))]
             {
                 eprintln!("Error: Firmware binary path is required for verification (--path)");
                 std::process::exit(1);
@@ -144,15 +151,17 @@ fn main() {
         };
         let binary_data = std::fs::read(&binary_path)
             .expect(&format!("Failed to read firmware binary from {:?}", binary_path));
-        
+
         let signature_path = if let Some(p) = args.signature_path {
             base_dir.join(p)
         } else {
-            #[cfg(feature = "test_mode")]
+            // In test mode, provide a default signature path for convenience.
+            #[cfg(test)]
             {
                 base_dir.join("firmware.sig")
             }
-            #[cfg(not(feature = "test_mode"))]
+            // In non-test mode, require the signature path argument.
+            #[cfg(not(test))]
             {
                 eprintln!("Error: Signature path is required for verification (--signature_path)");
                 std::process::exit(1);
@@ -163,7 +172,8 @@ fn main() {
         let signature = Signature::from_bytes(&signature_bytes.try_into().expect("Invalid signature length (expected 64 bytes)"));
         verifier(signature, &binary_data, verifying_key);
     }
-    
+
+    // Generate keys logic
     else if args.gen_keys {
         let private_key_path = base_dir.join("signing_key.bin");
         let public_key_path = base_dir.join("public_key.bin");
@@ -187,30 +197,27 @@ fn main() {
                     println!("Key generation cancelled.");
                 }
             } else {
-                println!("'signing_key.bin' found but 'public_key.bin' is missing. Regenerating public key...");
                 let private_key_bytes = std::fs::read(&private_key_path)
                     .expect(&format!("Failed to read private key from {:?}", private_key_path));
                 let signing_key = SigningKey::from_bytes(&private_key_bytes.try_into().expect("Invalid private key length (expected 32 bytes)"));
                 let public_key = signing_key.verifying_key();
-                
+
                 match std::fs::write(&public_key_path, public_key.to_bytes()) {
-                    Ok(_) => println!("Public key successfully regenerated and saved to {}.", public_key_path.display()),
+                    Ok(_) =>{},
                     Err(e) => eprintln!("Error saving public key to {}: {}", public_key_path.display(), e),
                 }
             }
         } else {
-            println!("No existing 'signing_key.bin' found. Generating new key pair...");
             generate_key_pair_in_dir(&base_dir);
         }
     }
-    
-    //fallback yessir
+
+    // Fallback if no operation is specified
     else {
         eprintln!("No operation specified. Use --sign, --verify, or --gen-keys.");
-        eprintln!("For help, use: {} --help", env!("CARGO_PKG_NAME")); 
+        eprintln!("For help, use: {} --help", env!("CARGO_PKG_NAME"));
         std::process::exit(1);
     }
-
 }
 
 pub struct ReturnKeypair {
