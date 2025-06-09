@@ -55,26 +55,42 @@ fn main() {
         generate_key_pair();
     }
     }
-
     else if args.verify {
-        let public_key_path = args.keypath
-            .expect("Public key path is required for verification (--keypath)");
-        let public_key_bytes = std::fs::read(&public_key_path)
-            .expect(&format!("Failed to read public key from {:?}", public_key_path));
-        let verifying_key = VerifyingKey::from_bytes(&public_key_bytes.try_into().expect("Invalid public key length (expected 32 bytes)"))
-            .expect("Failed to create VerifyingKey from bytes");
-        let binary_path = args.path
-            .expect("Firmware binary path is required for verification (--path)");
-        let binary_data = std::fs::read(&binary_path)
-            .expect(&format!("Failed to read firmware binary from {:?}", binary_path));
-        let signature_path = args.signaturepath
-            .expect("Signature path is required for verification (--signaturepath)");
-        let signature_bytes = std::fs::read(&signature_path)
-            .expect(&format!("Failed to read signature from {:?}", signature_path));
-        let signature = Signature::from_bytes(&signature_bytes.try_into().expect("Invalid signature length (expected 64 bytes)"));
-        verifier(signature, &binary_data, verifying_key);
-    }
-    
+            // Fallback for missing public key path: provide error and exit
+            let public_key_path = if let Some(p) = args.keypath {
+                p
+            } else {
+                eprintln!("Error: Public key path is required for verification (--keypath)");
+                std::process::exit(1);
+            };
+            let public_key_bytes = std::fs::read(&public_key_path)
+                .expect(&format!("Failed to read public key from {:?}", public_key_path));
+            let verifying_key = VerifyingKey::from_bytes(&public_key_bytes.try_into().expect("Invalid public key length (expected 32 bytes)"))
+                .expect("Failed to create VerifyingKey from bytes");
+
+            // Fallback for missing firmware binary path: provide error and exit
+            let binary_path = if let Some(p) = args.path {
+                p
+            } else {
+                eprintln!("Error: Firmware binary path is required for verification (--path)");
+                std::process::exit(1);
+            };
+            let binary_data = std::fs::read(&binary_path)
+                .expect(&format!("Failed to read firmware binary from {:?}", binary_path));
+
+            // Fallback for missing signature path: provide error and exit
+            let signature_path = if let Some(p) = args.signaturepath {
+                p
+            } else {
+                eprintln!("Error: Signature path is required for verification (--signaturepath)");
+                std::process::exit(1);
+            };
+            let signature_bytes = std::fs::read(&signature_path)
+                .expect(&format!("Failed to read signature from {:?}", signature_path));
+            let signature = Signature::from_bytes(&signature_bytes.try_into().expect("Invalid signature length (expected 64 bytes)"));
+            verifier(signature, &binary_data, verifying_key);
+        }
+
     else if args.gen_keys{
         generate_key_pair();
     }
