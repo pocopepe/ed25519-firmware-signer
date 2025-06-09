@@ -3,6 +3,7 @@ use ed25519_dalek::SigningKey;
 use ed25519_dalek::{Signature, Signer};
 use ed25519_dalek::{VerifyingKey, Verifier};
 use rand::rngs::OsRng;
+use std::path::Path; 
 
 
 #[derive(Parser, Debug)]
@@ -34,75 +35,86 @@ fn main() {
     let args = Props::parse();
 
     //sign logic
-    if args.sign{
-    let path = args.path.unwrap_or_else(|| "./test.bin".into());
-    let bytes = std::fs::read(&path);
-
-    let keys = if let Some(key_path) = args.key.as_deref() {
-        let bytes = std::fs::read(key_path).expect("Failed to read key file");
-        SigningKey::from_bytes(&bytes.try_into().expect("Invalid key length"))
-    } else {
-        generate_key_pair()
-    };
-
-    match bytes {
-        Ok(data) => {
-            let signature: Signature=sign(&data, keys.clone());
-
-            let signature_filename = "firmware.sig";
-            let signature_bytes = signature.to_bytes();
-
-            match std::fs::write(signature_filename, signature_bytes) {
-                Ok(_) => println!("Signature saved to: {}", signature_filename),
-                Err(e) => eprintln!("Error saving signature to {}: {}", signature_filename, e),
-            }
-        }
-        Err(e) => {
-            eprintln!("Error reading file: {}", e);
+        if args.sign {
+        // Firmware binary path is always required for signing
+        let binary_path = args.path.unwrap_or_else(|| {
+            eprintln!("Error: Firmware binary path is required for signing (--path)");
             std::process::exit(1);
+        });
+        let binary_data = std::fs::read(&binary_path)
+            .expect(&format!("Failed to read firmware binary from {:?}", binary_path));
+
+        let signing_key = if let Some(key_path) = args.key.as_deref() {
+            // User explicitly provided a key path, so use that
+            let bytes = std::fs::read(key_path).expect("Failed to read key file");
+            SigningKey::from_bytes(&bytes.try_into().expect("Invalid key length (expected 32 bytes)"))
+        } else {
+            // No key path provided, check for existing 'signing_key.bin'
+            let default_private_key_path = Path::new("signing_key.bin");
+            if default_private_key_path.exists() {
+                // If 'signing_key.bin' exists, use it
+                let bytes = std::fs::read(default_private_key_path)
+                    .expect(&format!("Failed to read private key from {:?}", default_private_key_path));
+                SigningKey::from_bytes(&bytes.try_into().expect("Invalid key length (expected 32 bytes)"))
+            } else {
+                generate_key_pair()
+            }
+        };
+
+        let signature: Signature = sign(&binary_data, signing_key.clone());
+
+        let signature_filename = "firmware.sig";
+        let signature_bytes = signature.to_bytes();
+
+        match std::fs::write(signature_filename, signature_bytes) {
+            Ok(_) => {},
+            Err(e) => eprintln!("Error saving signature to {}: {}", signature_filename, e),
         }
+
+        print!("Exec Sucess\n");
     }
-    if args.gen_keys{
-        generate_key_pair();
-    }
-    }
+
 
     //verify logic
+    // Verify logic
+    // Verify logic
     else if args.verify {
-            // Fallback for missing public key path: provide error and exit
-            let public_key_path = if let Some(p) = args.keypath {
-                p
-            } else {
-                eprintln!("Error: Public key path is required for verification (--keypath)");
-                std::process::exit(1);
-            };
-            let public_key_bytes = std::fs::read(&public_key_path)
-                .expect(&format!("Failed to read public key from {:?}", public_key_path));
-            let verifying_key = VerifyingKey::from_bytes(&public_key_bytes.try_into().expect("Invalid public key length (expected 32 bytes)"))
-                .expect("Failed to create VerifyingKey from bytes");
+        let public_key_path = if let Some(p) = args.keypath {
+            p
+        } else {
+            let default_public_key_filename = "public_key.bin";
+            let default_public_key_path = Path::new(default_public_key_filename);
 
-            // Fallback for missing firmware binary path: provide error and exit
-            let binary_path = if let Some(p) = args.path {
-                p
+            if default_public_key_path.exists() {
+                default_public_key_path.to_path_buf()
             } else {
-                eprintln!("Error: Firmware binary path is required for verification (--path)");
+                eprintln!("Error: Public key path is required for verification (--keypath) or 'public_key.bin' must exist in the current directory.");
                 std::process::exit(1);
-            };
-            let binary_data = std::fs::read(&binary_path)
-                .expect(&format!("Failed to read firmware binary from {:?}", binary_path));
-
-            // Fallback for missing signature path: provide error and exit
-            let signature_path = if let Some(p) = args.signature_path {
-                p
-            } else {
-                eprintln!("Error: Signature path is required for verification (--signaturepath)");
-                std::process::exit(1);
-            };
-            let signature_bytes = std::fs::read(&signature_path)
-                .expect(&format!("Failed to read signature from {:?}", signature_path));
-            let signature = Signature::from_bytes(&signature_bytes.try_into().expect("Invalid signature length (expected 64 bytes)"));
-            verifier(signature, &binary_data, verifying_key);
-        }
+            }
+        };
+        let public_key_bytes = std::fs::read(&public_key_path)
+            .expect(&format!("Failed to read public key from {:?}", public_key_path));
+        let verifying_key = VerifyingKey::from_bytes(&public_key_bytes.try_into().expect("Invalid public key length (expected 32 bytes)"))
+            .expect("Failed to create VerifyingKey from bytes");
+        let binary_path = if let Some(p) = args.path {
+            p
+        } else {
+            eprintln!("Error: Firmware binary path is required for verification (--path)");
+            std::process::exit(1);
+        };
+        let binary_data = std::fs::read(&binary_path)
+            .expect(&format!("Failed to read firmware binary from {:?}", binary_path));
+        let signature_path = if let Some(p) = args.signature_path {
+            p
+        } else {
+            eprintln!("Error: Signature path is required for verification (--signature_path)");
+            std::process::exit(1);
+        };
+        let signature_bytes = std::fs::read(&signature_path)
+            .expect(&format!("Failed to read signature from {:?}", signature_path));
+        let signature = Signature::from_bytes(&signature_bytes.try_into().expect("Invalid signature length (expected 64 bytes)"));
+        verifier(signature, &binary_data, verifying_key);
+    }
     
     //key generation logic
     else if args.gen_keys{
@@ -134,11 +146,11 @@ fn generate_key_pair() -> SigningKey {
     let public_key_filename = "public_key.bin";
 
     match std::fs::write(private_key_filename, signing_key.to_bytes()) {
-        Ok(_) => println!("Private signing key saved to: {}", private_key_filename),
+        Ok(_) => {},
         Err(e) => eprintln!("Error saving private key to {}: {}", private_key_filename, e),
     }
     match std::fs::write(public_key_filename, public_key.to_bytes()) {
-        Ok(_) => println!("Public key saved to: {}", public_key_filename),
+        Ok(_) => {},
         Err(e) => eprintln!("Error saving public key to {}: {}", public_key_filename, e),
     }
 
