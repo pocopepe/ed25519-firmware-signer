@@ -31,29 +31,42 @@ struct Props {
 
 fn main() {
     let args = Props::parse();
+
+    //sign logic
     if args.sign{
     let path = args.path.unwrap_or_else(|| "./test.bin".into());
     let bytes = std::fs::read(&path);
-    
+
     let keys = if let Some(key_path) = args.key.as_deref() {
         let bytes = std::fs::read(key_path).expect("Failed to read key file");
         SigningKey::from_bytes(&bytes.try_into().expect("Invalid key length"))
     } else {
         generate_key_pair()
     };
+
     match bytes {
         Ok(data) => {
             let signature: Signature=sign(&data, keys.clone());
-            println!("{:?}", signature); //remove it later
+
+            let signature_filename = "firmware.sig";
+            let signature_bytes = signature.to_bytes();
+
+            match std::fs::write(signature_filename, signature_bytes) {
+                Ok(_) => println!("Signature saved to: {}", signature_filename),
+                Err(e) => eprintln!("Error saving signature to {}: {}", signature_filename, e),
+            }
         }
         Err(e) => {
             eprintln!("Error reading file: {}", e);
+            std::process::exit(1);
         }
     }
     if args.gen_keys{
         generate_key_pair();
     }
     }
+
+    //verify logic
     else if args.verify {
             // Fallback for missing public key path: provide error and exit
             let public_key_path = if let Some(p) = args.keypath {
@@ -89,11 +102,13 @@ fn main() {
             let signature = Signature::from_bytes(&signature_bytes.try_into().expect("Invalid signature length (expected 64 bytes)"));
             verifier(signature, &binary_data, verifying_key);
         }
-
+    
+    //key generation logic
     else if args.gen_keys{
         generate_key_pair();
     }
 
+    //fallback yessir
     else {
         eprintln!("No operation specified. Use --sign, --verify, or --gen-keys.");
         eprintln!("For help, use: {} --help", env!("CARGO_PKG_NAME")); 
