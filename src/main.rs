@@ -13,17 +13,29 @@ struct Props {
     #[clap(long, help = "Path to private key for signing")]
     key: Option<std::path::PathBuf>,
 
-    #[clap(long, help = "Sign or verify")]
-    mode: String, // e.g., "sign" or "verify"
+    #[clap(short = 's', long, help = "Sign the firmware")]
+    sign: bool,
+
+    #[clap(short = 'v', long, help = "Verify the firmware signature")]
+    verify: bool,
+
+    #[clap(short = 'g', long, help = "Generate a new key pair")]
+    gen_keys: bool,
 }
 
 
 fn main() {
     let args = Props::parse();
+    
     let path = args.path.unwrap_or_else(|| "./test.bin".into());
-
     let bytes = std::fs::read(&path);
-    let keys=generate_key_pair();
+    
+    let keys = if let Some(key_path) = args.key.as_deref() {
+        let bytes = std::fs::read(key_path).expect("Failed to read key file");
+        SigningKey::from_bytes(&bytes.try_into().expect("Invalid key length"))
+    } else {
+        generate_key_pair()
+    };
 
     match bytes {
         Ok(data) => {
