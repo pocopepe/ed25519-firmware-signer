@@ -9,3 +9,6 @@ ed25519-dalek = { version = "2.1.1", features = ["rand_core"] }
 hex = "0.4"
 rand = "0.8.5"
 
+[features]
+default=[]
+test_mode=[]
