@@ -2,7 +2,6 @@ use clap::Parser;
 use ed25519_dalek::SigningKey;
 use ed25519_dalek::{Signature, Signer};
 use ed25519_dalek::{VerifyingKey, Verifier};
-use rand::prelude::*;
 use rand::rngs::OsRng;
 
 
