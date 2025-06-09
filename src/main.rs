@@ -4,7 +4,7 @@ use ed25519_dalek::{Signature, Signer};
 use ed25519_dalek::{VerifyingKey, Verifier};
 use rand::rngs::OsRng;
 use std::path::{Path, PathBuf};
-use std::io::{self, Write};
+use std::io::{self, Write}; 
 
 #[cfg(test)]
 use clap::Subcommand;
@@ -60,7 +60,6 @@ fn main() {
                 std::env::current_dir().expect("Failed to get current working directory")
             }
         }
-        // In non-test (production) mode, always use the current working directory.
         #[cfg(not(test))]
         {
             std::env::current_dir().expect("Failed to get current working directory")
@@ -72,12 +71,10 @@ fn main() {
         let binary_path = if let Some(p) = args.path {
             base_dir.join(p)
         } else {
-            // In test mode, provide a default binary path for convenience.
             #[cfg(test)]
             {
                 base_dir.join("test.bin")
             }
-            // In non-test mode, require the path argument.
             #[cfg(not(test))]
             {
                 eprintln!("Error: Firmware binary path is required for signing (--path)");
@@ -97,7 +94,7 @@ fn main() {
                     .expect(&format!("Failed to read private key from {:?}", default_private_key_path));
                 SigningKey::from_bytes(&bytes.try_into().expect("Invalid key length (expected 32 bytes)"))
             } else {
-                // If no key path is given and default doesn't exist, generate a new one.
+                println!("No signing key specified and 'signing_key.bin' not found. Generating a new key pair...");
                 generate_key_pair_in_dir(&base_dir)
             }
         };
@@ -108,11 +105,12 @@ fn main() {
         let signature_bytes = signature.to_bytes();
 
         match std::fs::write(&signature_filename, signature_bytes) {
-            Ok(_) => {},
+            Ok(_) => {
+                println!("Signature successfully saved to {}.", signature_filename.display());
+                println!("Exec Sucess");
+            },
             Err(e) => eprintln!("Error saving signature to {}: {}", signature_filename.display(), e),
         }
-
-        print!("Exec Sucess\n");
     }
 
     // Verify logic
@@ -136,12 +134,10 @@ fn main() {
         let binary_path = if let Some(p) = args.path {
             base_dir.join(p)
         } else {
-            // In test mode, provide a default binary path for convenience.
             #[cfg(test)]
             {
                 base_dir.join("test.bin")
             }
-            // In non-test mode, require the path argument.
             #[cfg(not(test))]
             {
                 eprintln!("Error: Firmware binary path is required for verification (--path)");
@@ -154,12 +150,10 @@ fn main() {
         let signature_path = if let Some(p) = args.signature_path {
             base_dir.join(p)
         } else {
-            // In test mode, provide a default signature path for convenience.
             #[cfg(test)]
             {
                 base_dir.join("firmware.sig")
             }
-            // In non-test mode, require the signature path argument.
             #[cfg(not(test))]
             {
                 eprintln!("Error: Signature path is required for verification (--signature_path)");
@@ -196,22 +190,23 @@ fn main() {
                     println!("Key generation cancelled.");
                 }
             } else {
+                println!("'signing_key.bin' found but 'public_key.bin' is missing. Regenerating public key from existing private key...");
                 let private_key_bytes = std::fs::read(&private_key_path)
                     .expect(&format!("Failed to read private key from {:?}", private_key_path));
                 let signing_key = SigningKey::from_bytes(&private_key_bytes.try_into().expect("Invalid private key length (expected 32 bytes)"));
                 let public_key = signing_key.verifying_key();
 
                 match std::fs::write(&public_key_path, public_key.to_bytes()) {
-                    Ok(_) =>{},
+                    Ok(_) => println!("Public key successfully regenerated and saved to {}.", public_key_path.display()),
                     Err(e) => eprintln!("Error saving public key to {}: {}", public_key_path.display(), e),
                 }
             }
         } else {
+            println!("No existing 'signing_key.bin' found. Generating a new key pair...");
             generate_key_pair_in_dir(&base_dir);
         }
     }
 
-    // Fallback if no operation is specified
     else {
         eprintln!("No operation specified. Use --sign, --verify, or --gen-keys.");
         eprintln!("For help, use: {} --help", env!("CARGO_PKG_NAME"));
@@ -219,10 +214,6 @@ fn main() {
     }
 }
 
-pub struct ReturnKeypair {
-    pub signature: Signature,
-    pub signing_key: SigningKey,
-}
 
 fn generate_key_pair_in_dir(output_dir: &Path) -> SigningKey {
     let mut rng = OsRng;
@@ -235,20 +226,20 @@ fn generate_key_pair_in_dir(output_dir: &Path) -> SigningKey {
     let public_key_filename = output_dir.join("public_key.bin");
 
     match std::fs::write(&private_key_filename, signing_key.to_bytes()) {
-        Ok(_) => {},
+        Ok(_) => println!("Private key saved to {}.", private_key_filename.display()),
         Err(e) => eprintln!("Error saving private key to {}: {}", private_key_filename.display(), e),
     }
     match std::fs::write(&public_key_filename, public_key.to_bytes()) {
-        Ok(_) => {},
+        Ok(_) => println!("Public key saved to {}.", public_key_filename.display()),
         Err(e) => eprintln!("Error saving public key to {}: {}", public_key_filename.display(), e),
     }
 
-    return signing_key;
+    signing_key
 }
 
 fn sign(message: &[u8], signing_key:SigningKey)->Signature{
     let signature = signing_key.sign(message);
-    return signature;
+    signature 
 }
 
 fn verifier(signature:Signature, message:&[u8], verifying_key:VerifyingKey){
