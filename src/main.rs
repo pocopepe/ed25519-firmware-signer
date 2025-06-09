@@ -19,15 +19,16 @@ fn main() {
     let path = args.path.unwrap_or_else(|| "./test.bin".into());
 
     let bytes = std::fs::read(&path);
+    let keys=generate_key_pair();
 
     
 
 
     match bytes {
         Ok(data) => {
-            let temp=generate_key_pair(&data);
-            verifier(temp.signature, &data, temp.signing_key);
-
+            let signature: Signature=sign(&data, keys.clone());
+            verifier(signature, &data, keys);
+            println!("{:?}", signature);
 
         }
         Err(e) => {
@@ -42,17 +43,22 @@ pub struct ReturnKeypair {
 
 
 
-fn generate_key_pair(message: &[u8]) -> ReturnKeypair {
+fn generate_key_pair() -> SigningKey {
 let mut rng = rand::rng();
     let bytestream:[u8; 32]=rng.random();        
     let signing_key = SigningKey::from_bytes(&bytestream);
+    return signing_key;
+}
+
+fn sign(message: &[u8], signing_key:SigningKey)->Signature{
     let signature = signing_key.sign(message);
-    ReturnKeypair {signature,signing_key,}
+    return signature;
 }
 
 fn verifier(signature:Signature, message:&[u8], signing_key:SigningKey){
 let verifying_key: VerifyingKey = signing_key.verifying_key();
-assert!(
-    verifying_key.verify(message, &signature).is_ok(),
-    "Signature verification failed!"
-);}
+    match verifying_key.verify(message, &signature) {
+        Ok(_) => println!("Signature verified."),
+        Err(_) => eprintln!("Signature verification failed!"),
+    }
+}
