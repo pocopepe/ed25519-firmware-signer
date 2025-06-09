@@ -51,7 +51,6 @@ fn main() {
             eprintln!("Error reading file: {}", e);
         }
     }
-
     if args.gen_keys{
         generate_key_pair();
     }
@@ -75,6 +74,17 @@ fn main() {
         let signature = Signature::from_bytes(&signature_bytes.try_into().expect("Invalid signature length (expected 64 bytes)"));
         verifier(signature, &binary_data, verifying_key);
     }
+    
+    else if args.gen_keys{
+        generate_key_pair();
+    }
+
+    else {
+        eprintln!("No operation specified. Use --sign, --verify, or --gen-keys.");
+        eprintln!("For help, use: {} --help", env!("CARGO_PKG_NAME")); 
+        std::process::exit(1);
+    }
+
 }
 
 pub struct ReturnKeypair {
@@ -87,6 +97,7 @@ fn generate_key_pair() -> SigningKey {
 let mut rng = rand::rng();
     let bytestream:[u8; 32]=rng.random();        
     let signing_key = SigningKey::from_bytes(&bytestream);
+    print!("done deal"); //remove it in post
     return signing_key;
 }
 
