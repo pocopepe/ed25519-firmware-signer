@@ -18,10 +18,10 @@ struct Props {
     #[clap(short= 'k', long, help = "Path to private key for signing")]
     signing_key: Option<std::path::PathBuf>,
 
-    #[clap(short = 'p' ,long, help="Path to store Keys (for public key in verify mode)")]
+    #[clap(short = 'p' ,long, help="Path to Public Key")]
     public_key: Option<std::path::PathBuf>,
 
-    #[clap(long, help="Path to store Signature (for verification mode)")]
+    #[clap(long, help="Path to store Signature")]
     signature: Option<std::path::PathBuf>,
 
     #[clap(short = 's', long, help = "Sign the firmware")]
