@@ -12,13 +12,13 @@ use clap::Subcommand;
 #[derive(Parser, Debug)]
 #[command(about = "Sign or verify firmware blobs using Ed25519", author, version)]
 struct Props {
-    #[clap(long, help = "Path to firmware binary")]
+    #[clap(short='b', long, help = "Path to firmware binary")]
     path: Option<std::path::PathBuf>,
 
-    #[clap(long, help = "Path to private key for signing")]
+    #[clap(short= 'k', long, help = "Path to private key for signing")]
     signing_key: Option<std::path::PathBuf>,
 
-    #[clap(long, help="Path to store Keys (for public key in verify mode)")]
+    #[clap(short = 'p' ,long, help="Path to store Keys (for public key in verify mode)")]
     public_key: Option<std::path::PathBuf>,
 
     #[clap(long, help="Path to store Signature (for verification mode)")]
