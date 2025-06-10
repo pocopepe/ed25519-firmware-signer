@@ -16,7 +16,13 @@ struct Props {
     path: Option<std::path::PathBuf>,
 
     #[clap(long, help = "Path to private key for signing")]
-    key: Option<std::path::PathBuf>,
+    signing_key: Option<std::path::PathBuf>,
+
+    #[clap(long, help="Path to store Keys (for public key in verify mode)")]
+    public_key: Option<std::path::PathBuf>,
+
+    #[clap(long, help="Path to store Signature (for verification mode)")]
+    signature: Option<std::path::PathBuf>,
 
     #[clap(short = 's', long, help = "Sign the firmware")]
     sign: bool,
@@ -26,12 +32,6 @@ struct Props {
 
     #[clap(short = 'g', long, help = "Generate a new key pair")]
     gen_keys: bool,
-
-    #[clap(long, help="Path to store Keys (for public key in verify mode)")]
-    keypath: Option<std::path::PathBuf>,
-
-    #[clap(long, help="Path to store Signature (for verification mode)")]
-    signature_path: Option<std::path::PathBuf>,
 
     #[cfg(test)]
     #[clap(subcommand)]
@@ -84,7 +84,7 @@ fn main() {
         let binary_data = std::fs::read(&binary_path)
             .expect(&format!("Failed to read firmware binary from {:?}", binary_path));
 
-        let signing_key = if let Some(key_path) = args.key.as_deref() {
+        let signing_key = if let Some(key_path) = args.signing_key.as_deref() {
             let bytes = std::fs::read(key_path).expect("Failed to read key file");
             SigningKey::from_bytes(&bytes.try_into().expect("Invalid key length (expected 32 bytes)"))
         } else {
@@ -115,7 +115,7 @@ fn main() {
 
     // Verify logic
     else if args.verify {
-        let public_key_path = if let Some(p) = args.keypath {
+        let public_key_path = if let Some(p) = args.public_key {
             p
         } else {
             let default_public_key_filename = base_dir.join("public_key.bin");
@@ -147,7 +147,7 @@ fn main() {
         let binary_data = std::fs::read(&binary_path)
             .expect(&format!("Failed to read firmware binary from {:?}", binary_path));
 
-        let signature_path = if let Some(p) = args.signature_path {
+        let signature_path = if let Some(p) = args.signature {
             base_dir.join(p)
         } else {
             #[cfg(test)]
