@@ -4,7 +4,11 @@ use ed25519_dalek::{Signature, Signer};
 use ed25519_dalek::{VerifyingKey, Verifier};
 use rand::rngs::OsRng;
 use std::path::{Path, PathBuf};
-use std::io::{self, Write}; 
+use std::io::{self, BufReader, Write}; 
+use std::fs::File;
+use hex;
+
+
 
 #[cfg(test)]
 use clap::Subcommand;
@@ -84,8 +88,12 @@ fn main() {
                 std::process::exit(1);
             }
         };
-        let binary_data = std::fs::read(&binary_path)
-            .expect(&format!("Failed to read firmware binary from {:?}", binary_path));
+        let binary_data = read_firmware_data(&binary_path)
+            .unwrap_or_else(|e| {
+                eprintln!("Error reading firmware from {:?}: {}", binary_path, e);
+                std::process::exit(1);
+            });
+
 
         let signing_key = if let Some(key_path) = args.signing_key.as_deref() {
             let bytes = std::fs::read(key_path).expect("Failed to read key file");
@@ -245,3 +253,30 @@ fn verifier(signature:Signature, message:&[u8], verifying_key:VerifyingKey){
         Err(_) => eprintln!("Signature verification failed!"),
     }
 }
+
+fn read_firmware_data(path: &PathBuf) -> io::Result<Vec<u8>> {
+    let extension = path.extension()
+                        .and_then(|s| s.to_str())
+                        .unwrap_or_default();
+
+    match extension.to_lowercase().as_str() {
+        "bin" => {
+            std::fs::read(path)
+        },
+        "hex" => {
+            read_intel_hex_file(path)
+        },
+        _ => Err(io::Error::new(io::ErrorKind::InvalidInput,
+                                 format!("Unsupported file extension: {}", extension))),
+    }
+}
+
+fn read_intel_hex_file(path: &PathBuf)->io::Result<Vec<u8>>{
+    let file = File::open(path)?;
+    let reader=BufReader::new(file);
+    let mut binary_data=Vec::new();
+    let mut current_base_address: u32 = 0;
+    
+
+}
+
