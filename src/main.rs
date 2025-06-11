@@ -36,10 +36,6 @@ struct Props {
     #[clap(long)]
     verify: bool,
 
-    /// Generate a new key pair
-    #[clap(short = 'g', long)]
-    gen_keys: bool,
-
     #[cfg(test)]
     #[clap(subcommand)]
     command: Option<TestCommand>,
@@ -173,8 +169,8 @@ fn main() {
         verifier(signature, &binary_data, verifying_key);
     }
 
-    // Generate keys logic
-    else if args.gen_keys {
+    // Generate keys logic, if everything falls through
+    else  {
         let private_key_path = base_dir.join("signing_key.bin");
         let public_key_path = base_dir.join("public_key.bin");
 
@@ -182,8 +178,8 @@ fn main() {
             if public_key_path.exists() {
                 eprintln!("Warning: Existing '{}' and '{}' found in {}.",
                           private_key_path.display(), public_key_path.display(), base_dir.display());
-                eprintln!("Running '--gen-keys' will overwrite these files, and the old keys cannot be retrieved.");
-                eprint!("Are you sure you want to proceed? (y/N): ");
+                eprintln!("Ths command will overwrite existing keys, and the old keys cannot be retrieved.");
+                eprint!("Are you sure you want to proceed? (y/n): ");
                 io::stdout().flush().expect("Failed to flush stdout");
 
                 let mut input = String::new();
@@ -212,12 +208,6 @@ fn main() {
             println!("No existing 'signing_key.bin' found. Generating a new key pair...");
             generate_key_pair_in_dir(&base_dir);
         }
-    }
-
-    else {
-        eprintln!("No operation specified.");
-        eprintln!("For help, use: {} --help", env!("CARGO_PKG_NAME"));
-        std::process::exit(1);
     }
 }
 
