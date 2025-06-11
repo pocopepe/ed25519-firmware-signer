@@ -12,25 +12,32 @@ use clap::Subcommand;
 #[derive(Parser, Debug)]
 #[command(about = "Sign or verify firmware blobs using Ed25519", author, version)]
 struct Props {
-    #[clap(short='b', long, help = "Path to firmware binary")]
+    /// Path to firmware binary
+    #[clap(short = 'f', long)]
     path: Option<std::path::PathBuf>,
 
-    #[clap(short= 'k', long, help = "Path to private key for signing")]
+    /// Path to private key for signing
+    #[clap(short = 's', long)]
     signing_key: Option<std::path::PathBuf>,
 
-    #[clap(short = 'p' ,long, help="Path to Public Key")]
+    /// Path to public key for verification
+    #[clap(short = 'p', long)]
     public_key: Option<std::path::PathBuf>,
 
-    #[clap(long, help="Path to store Signature")]
+    /// Path to store the generated signature
+    #[clap(short = 'o', long)]
     signature: Option<std::path::PathBuf>,
 
-    #[clap(short = 's', long, help = "Sign the firmware")]
+    /// Sign the firmware binary
+    #[clap(long)]
     sign: bool,
 
-    #[clap(short = 'v', long, help = "Verify the firmware signature")]
+    /// Verify the firmware signature
+    #[clap(long)]
     verify: bool,
 
-    #[clap(short = 'g', long, help = "Generate a new key pair")]
+    /// Generate a new key pair
+    #[clap(short = 'g', long)]
     gen_keys: bool,
 
     #[cfg(test)]
