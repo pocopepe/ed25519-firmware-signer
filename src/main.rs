@@ -9,6 +9,10 @@ use std::io::BufRead;
 
 use hex;
 
+mod crypto_logic;
+
+
+
 
 
 #[cfg(test)]
@@ -111,7 +115,7 @@ fn main() {
             }
         };
 
-        let signature: Signature = sign(&binary_data, signing_key.clone());
+        let signature: Signature = crypto_logic::sign(&binary_data, signing_key.clone());
 
         let signature_filename = base_dir.join("firmware.sig");
         let signature_bytes = signature.to_bytes();
@@ -244,11 +248,6 @@ fn generate_key_pair_in_dir(output_dir: &Path) -> SigningKey {
     }
 
     signing_key
-}
-
-fn sign(message: &[u8], signing_key:SigningKey)->Signature{
-    let signature = signing_key.sign(message);
-    signature
 }
 
 fn verifier(signature:Signature, message:&[u8], verifying_key:VerifyingKey){
