@@ -15,8 +15,7 @@ pub fn read_firmware_data(path: &PathBuf) -> io::Result<Vec<u8>> {
         "hex" => {
             read_intel_hex_file(path)
         },
-        _ => Err(io::Error::new(io::ErrorKind::InvalidInput,
-                                 format!("Unsupported file extension: {}", extension))),
+        _ => Err(io::Error::new(io::ErrorKind::InvalidInput,format!("Unsupported file extension: {}", extension))),
     }
 }
 
