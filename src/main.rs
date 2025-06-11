@@ -1,7 +1,5 @@
 use clap::Parser;
-use ed25519_dalek::SigningKey;
-use ed25519_dalek::{Signature, Signer};
-use ed25519_dalek::{VerifyingKey, Verifier};
+use ed25519_dalek::{SigningKey, VerifyingKey, Signature};
 use rand::rngs::OsRng;
 use std::path::{Path, PathBuf};
 use std::io::{self, BufReader, Write}; 
@@ -182,7 +180,7 @@ fn main() {
         let signature_bytes = std::fs::read(&signature_path)
             .expect(&format!("Failed to read signature from {:?}", signature_path));
         let signature = Signature::from_bytes(&signature_bytes.try_into().expect("Invalid signature length (expected 64 bytes)"));
-        verifier(signature, &binary_data, verifying_key);
+        crypto_logic::verifier(signature, &binary_data, verifying_key);
     }
 
     // Generate keys logic, if everything falls through
@@ -250,12 +248,7 @@ fn generate_key_pair_in_dir(output_dir: &Path) -> SigningKey {
     signing_key
 }
 
-fn verifier(signature:Signature, message:&[u8], verifying_key:VerifyingKey){
-    match verifying_key.verify(message, &signature) {
-        Ok(_) => println!("Signature verified."),
-        Err(_) => eprintln!("Signature verification failed!"),
-    }
-}
+
 
 fn read_firmware_data(path: &PathBuf) -> io::Result<Vec<u8>> {
     let extension = path.extension()
