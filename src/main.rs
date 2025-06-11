@@ -1,9 +1,7 @@
 use clap::Parser;
 use ed25519_dalek::{SigningKey, VerifyingKey, Signature};
-use rand::rngs::OsRng;
-use std::path::{Path, PathBuf};
-use std::io::{self, Write}; 
-
+use std::path::PathBuf;
+use std::io::Write; 
 
 mod crypto_logic;
 mod read_files;
@@ -16,19 +14,19 @@ use clap::Subcommand;
 struct Props {
     /// Path to firmware binary
     #[clap(short = 'f', long)]
-    path: Option<std::path::PathBuf>,
+    path: Option<PathBuf>,
 
     /// Path to private key for signing
     #[clap(short = 's', long)]
-    signing_key: Option<std::path::PathBuf>,
+    signing_key: Option<PathBuf>,
 
     /// Path to public key for verification
     #[clap(short = 'p', long)]
-    public_key: Option<std::path::PathBuf>,
+    public_key: Option<PathBuf>,
 
     /// Path to store the generated signature
     #[clap(short = 'o', long)]
-    signature: Option<std::path::PathBuf>,
+    signature: Option<PathBuf>,
 
     /// Sign the firmware binary
     #[clap(long)]
@@ -104,7 +102,7 @@ fn main() {
                 SigningKey::from_bytes(&bytes.try_into().expect("Invalid key length (expected 32 bytes)"))
             } else {
                 println!("No signing key specified and 'signing_key.bin' not found. Generating a new key pair...");
-                generate_key_pair_in_dir(&base_dir)
+                crypto_logic::generate_key_pair_in_dir(&base_dir)
             }
         };
 
@@ -189,15 +187,15 @@ fn main() {
                           private_key_path.display(), public_key_path.display(), base_dir.display());
                 eprintln!("Ths command will overwrite existing keys, and the old keys cannot be retrieved.");
                 eprint!("Are you sure you want to proceed? (y/n): ");
-                io::stdout().flush().expect("Failed to flush stdout");
+                std::io::stdout().flush().expect("Failed to flush stdout");
 
                 let mut input = String::new();
-                io::stdin().read_line(&mut input).expect("Failed to read line");
+                std::io::stdin().read_line(&mut input).expect("Failed to read line");
                 let confirmation = input.trim().to_lowercase();
 
                 if confirmation == "y" || confirmation == "yes" {
                     println!("Overwriting existing keys...");
-                    generate_key_pair_in_dir(&base_dir);
+                    crypto_logic::generate_key_pair_in_dir(&base_dir);
                 } else {
                     println!("Key generation cancelled.");
                 }
@@ -215,30 +213,7 @@ fn main() {
             }
         } else {
             println!("No existing 'signing_key.bin' found. Generating a new key pair...");
-            generate_key_pair_in_dir(&base_dir);
+            crypto_logic::generate_key_pair_in_dir(&base_dir);
         }
     }
-}
-
-
-fn generate_key_pair_in_dir(output_dir: &Path) -> SigningKey {
-    let mut rng = OsRng;
-
-    let signing_key = SigningKey::generate(&mut rng);
-
-    let public_key = signing_key.verifying_key();
-
-    let private_key_filename = output_dir.join("signing_key.bin");
-    let public_key_filename = output_dir.join("public_key.bin");
-
-    match std::fs::write(&private_key_filename, signing_key.to_bytes()) {
-        Ok(_) => println!("Private key saved to {}.", private_key_filename.display()),
-        Err(e) => eprintln!("Error saving private key to {}: {}", private_key_filename.display(), e),
-    }
-    match std::fs::write(&public_key_filename, public_key.to_bytes()) {
-        Ok(_) => println!("Public key saved to {}.", public_key_filename.display()),
-        Err(e) => eprintln!("Error saving public key to {}: {}", public_key_filename.display(), e),
-    }
-
-    signing_key
 }
