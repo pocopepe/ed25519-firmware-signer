@@ -36,4 +36,3 @@ pub fn generate_key_pair_in_dir(output_dir: &std::path::Path) -> SigningKey {
 
     signing_key
 }
-

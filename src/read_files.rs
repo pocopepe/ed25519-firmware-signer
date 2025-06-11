@@ -125,5 +125,3 @@ fn hex_to_u16(s: &str) -> io::Result<u16> {
     u16::from_str_radix(s, 16)
         .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, format!("Failed to parse hex string '{}' to u16: {}", s, e)))
 }
-
-
