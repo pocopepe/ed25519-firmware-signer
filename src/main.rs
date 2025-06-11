@@ -156,8 +156,11 @@ fn main() {
                 std::process::exit(1);
             }
         };
-        let binary_data = std::fs::read(&binary_path)
-            .expect(&format!("Failed to read firmware binary from {:?}", binary_path));
+        let binary_data = read_firmware_data(&binary_path)
+                    .unwrap_or_else(|e| {
+                        eprintln!("Error reading firmware from {:?}: {}", binary_path, e);
+                        std::process::exit(1);
+                    });
 
         let signature_path = if let Some(p) = args.signature {
             base_dir.join(p)
