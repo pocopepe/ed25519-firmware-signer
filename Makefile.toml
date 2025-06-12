@@ -1,0 +1,78 @@
+# Makefile.toml
+
+# Define a variable for the binary name
+[config]
+bin_name = "binsign"
+
+# --- Base Tasks for Building and Packaging ---
+
+[tasks.build-release]
+description = "Builds the release binary for the native system."
+command = "cargo"
+args = ["build", "--release"]
+
+[tasks.build-linux-x86_64]
+description = "Builds the release binary for Linux x86_64 using cross."
+command = "cross"
+args = ["build", "--release", "--target", "x86_64-unknown-linux-gnu"]
+
+[tasks.build-windows-x86_64]
+description = "Builds the release binary for Windows x86_64 (MSVC ABI) using cross."
+command = "cross"
+args = ["build", "--release", "--target", "x86_64-pc-windows-msvc"]
+# You could also use x86_64-pc-windows-gnu if you prefer MinGW toolchain
+
+[tasks.package-deb]
+description = "Creates a Debian (.deb) package."
+dependencies = ["build-linux-x86_64"]
+command = "cargo"
+args = ["deb"]
+
+[tasks.package-rpm]
+description = "Creates a Red Hat (.rpm) package."
+dependencies = ["build-linux-x86_64"]
+command = "cargo"
+args = ["rpm", "build"]
+
+[tasks.package-aur]
+description = "Prepares files for an Arch Linux (AUR) package. (PKGBUILD, etc.)"
+dependencies = ["build-linux-x86_64"]
+command = "cargo"
+args = ["aur"] 
+
+[tasks.bundle-windows]
+description = "Creates a ZIP archive for Windows."
+dependencies = ["build-windows-x86_64"]
+script = '''
+    # Create a directory for bundled releases if it doesn't exist
+    mkdir -p target/release/dist
+
+    # Path to the compiled Windows executable
+    WIN_EXE_PATH="target/x86_64-pc-windows-msvc/release/{{config.bin_name}}.exe"
+    # Destination ZIP file name
+    ZIP_FILE="target/release/dist/{{config.bin_name}}-x86_64-windows.zip"
+
+    # Zip the executable. '-j' junk paths (store just the file name).
+    # Ensure 'zip' utility is available on your system.
+    zip -j "${ZIP_FILE}" "${WIN_EXE_PATH}"
+
+    echo "Windows bundle created: ${ZIP_FILE}"
+'''
+
+# --- Main Release Task ---
+
+[tasks.release]
+description = "Performs a full release: bumps version, builds, and packages for multiple platforms."
+# This task depends on all the sub-tasks needed for a full release.
+dependencies = [
+    "bump-version",
+    "package-deb",
+    "package-rpm",
+    "package-aur",
+    "bundle-windows"
+]
+
+[tasks.bump-version]
+description = "Bumps the minor version, creates a Git tag, and commits changes."
+command = "cargo"
+args = ["release", "minor", "--no-publish"]
