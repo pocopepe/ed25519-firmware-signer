@@ -1,7 +1,32 @@
 use ed25519_dalek::{Signature, Signer, SigningKey};
 use ed25519_dalek::{VerifyingKey, Verifier};
 use rand::rngs::OsRng;
+use std::io::{self, Write}; 
 
+pub fn get_password_for_keys()->String{
+    loop {
+        print!("Enter password for private key: ");
+        std::io::stdout().flush().expect("Failed to flush stdout");
+        let first_entry: String = rpassword::read_password()
+            .expect("Failed to read password from stdin");
+
+        print!("Confirm password: ");
+        io::stdout().flush().expect("Failed to flush stdout");
+        let second_entry = rpassword::read_password()
+            .expect("Failed to read password from stdin");
+
+        if first_entry == second_entry {
+            if first_entry.is_empty() {
+                eprintln!("Password cannot be empty. Please try again.");
+            } else {
+                println!("Password confirmed.");
+                return first_entry;
+            }
+        } else {
+            eprintln!("Passwords do not match. Please try again.");
+        }
+    }
+}
 
 pub fn sign(message: &[u8], signing_key: SigningKey) -> Signature {
     let signature = signing_key.sign(message);
@@ -34,9 +59,4 @@ pub fn generate_key_pair_in_dir(output_dir: &std::path::Path) -> SigningKey {
     }
 
     signing_key
-}
-
-pub fn get_password_for_keys()->String{
-    let password= rpassword::prompt_password("Enter your password").unwrap();
-    password
 }
