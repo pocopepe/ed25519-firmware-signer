@@ -20,6 +20,8 @@ hex = "0.4"
 rand = "0.8.5"
 rpassword = "7.4.0"
 typenum = "1.18.0"
+zeroize = { version = "1.7", features = ["std"] }
+
 
 [features]
 default=[]

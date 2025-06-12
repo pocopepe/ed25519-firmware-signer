@@ -1,8 +1,12 @@
-use std::io::BufRead;
-use hex;
-use std::path::PathBuf;
-use std::io::{self, BufReader}; 
+// src/read_files.rs
 
+use std::io::{self, BufReader, BufRead};
+use std::fs::File;
+use std::path::PathBuf;
+use hex; // Make sure `hex = "0.4"` is in your Cargo.toml
+
+
+/// Reads firmware data from a file, handling .bin and .hex extensions.
 pub fn read_firmware_data(path: &PathBuf) -> io::Result<Vec<u8>> {
     let extension = path.extension()
                         .and_then(|s| s.to_str())
@@ -10,18 +14,22 @@ pub fn read_firmware_data(path: &PathBuf) -> io::Result<Vec<u8>> {
 
     match extension.to_lowercase().as_str() {
         "bin" => {
+            println!("Reading binary file: {}", path.display());
             std::fs::read(path)
         },
         "hex" => {
+            println!("Reading Intel HEX file: {}", path.display());
             read_intel_hex_file(path)
         },
-        _ => Err(io::Error::new(io::ErrorKind::InvalidInput,format!("Unsupported file extension: {}", extension))),
+        _ => Err(io::Error::new(io::ErrorKind::InvalidInput,
+                                 format!("Unsupported file extension: {}", extension))),
     }
 }
 
-//worked up a whole ass hex file reading :sob:
+/// Reads an Intel HEX file and converts its data into a raw byte vector.
+/// This is a simplified parser and might not handle all edge cases of the Intel HEX format.
 fn read_intel_hex_file(path: &PathBuf) -> io::Result<Vec<u8>> {
-    let file = std::fs::File::open(path)?;
+    let file = File::open(path)?;
     let reader = BufReader::new(file);
     let mut binary_data = Vec::new();
     let mut current_address: u64 = 0; // keeps track of where the pointer's at
@@ -74,11 +82,11 @@ fn read_intel_hex_file(path: &PathBuf) -> io::Result<Vec<u8>> {
         if calculated_checksum != line_checksum {
             eprintln!("Warning: Checksum mismatch on line {} in {}. Expected: {:02X}, Got: {:02X}",
                       line_num + 1, path.display(), line_checksum, calculated_checksum);
-            return Err(io::Error::new(io::ErrorKind::InvalidData, "Checksum mismatch")); //wouldn't wanna be signing anything that even the checksum doesn't want me singing xD
+            return Err(io::Error::new(io::ErrorKind::InvalidData, "Checksum mismatch"));
         }
         //calculating base addresses for 16 or 32 bit ones, or just reading em with 00
         match record_type {
-            0x00 => { //contains the actual binary itself 
+            0x00 => { //contains the actual binary itself
                 let start_index = (current_address + record_address) as usize;
                 if binary_data.len() < start_index + data_bytes.len() {
                     binary_data.resize(start_index + data_bytes.len(), 0x00);
@@ -86,9 +94,9 @@ fn read_intel_hex_file(path: &PathBuf) -> io::Result<Vec<u8>> {
                 binary_data[start_index..(start_index + data_bytes.len())].copy_from_slice(&data_bytes);
             }
             0x01 => { //implies end of record
-                break; 
+                break;
             }
-            0x02 => { //just a physical address calculation for 8086 and stuff, thanks to ai now I check for the integrity of the hex passed in as well
+            0x02 => { //physical address calculation for 8086 etc.
                 if data_bytes.len() != 2 {
                     return Err(io::Error::new(io::ErrorKind::InvalidData,
                                                format!("Invalid data length for Extended Segment Address Record on line {} in {}: expected 2 bytes, got {}", line_num + 1, path.display(), data_bytes.len())));
@@ -96,20 +104,18 @@ fn read_intel_hex_file(path: &PathBuf) -> io::Result<Vec<u8>> {
                 let segment_address = (data_bytes[0] as u64) << 8 | (data_bytes[1] as u64);
                 current_address = segment_address << 4;
             }
-            //03 ignored cause CS and IP are just pointers used to write software, all I wanna do is read the binary, doesn't matter to me
             0x04 => {// same as 02 but just for 32bit rather than 20
                 if data_bytes.len() != 2 {
                     return Err(io::Error::new(io::ErrorKind::InvalidData,
                                                format!("Invalid data length for Extended Linear Address Record on line {} in {}: expected 2 bytes, got {}", line_num + 1, path.display(), data_bytes.len())));
                 }
                 let linear_address = (data_bytes[0] as u64) << 8 | (data_bytes[1] as u64);
-                current_address = linear_address << 16; 
+                current_address = linear_address << 16;
             }
             _ => {
                 eprintln!("Warning: Unsupported Intel HEX record type (0x{:02X}) on line {} in {}. Skipping.",
                           record_type, line_num + 1, path.display());
             }
-            //05 ignored for the same reasons as 03, I don't want any more pointers
         }
     }
     Ok(binary_data)
