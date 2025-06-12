@@ -27,10 +27,9 @@ fn main() {
             std::env::current_dir().expect("Failed to get current working directory")
         }
     };
+        // Sign logic 
 
-    // --- Conditional Logic for Commands ---
     if args.sign {
-        // Sign logic remains the same
         let binary_path = if let Some(p) = args.path {
             p
         } else {
@@ -114,9 +113,6 @@ fn main() {
 
         basic_logic::verifier(signature, &binary_data, verifying_key);
     }
-    // --- Default to Key Generation ---
-    // If no explicit command is given (not --sign, not --verify), and not --generate-keys
-    // then assume the user wants to generate keys.
     else if !args.generate_keys { // Only enter this if --generate-keys wasn't explicitly used
         println!("No specific action specified. Defaulting to key generation.");
         basic_logic::generate_key_pair_in_dir(&base_dir)

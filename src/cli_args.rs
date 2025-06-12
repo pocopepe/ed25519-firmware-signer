@@ -1,7 +1,7 @@
 use clap::Parser;
 use std::path::PathBuf;
 
-#[cfg(test)] // Apply this cfg to the use statement as well
+#[cfg(test)] 
 use clap::Subcommand;
 
 #[derive(Parser, Debug)]
