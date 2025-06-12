@@ -25,8 +25,8 @@ fn main() {
             std::env::current_dir().expect("Failed to get current working directory")
         }
     };
-        // Sign logic 
-
+    
+    // Sign logic 
     if args.sign {
         let binary_path = if let Some(p) = args.path {
             p
