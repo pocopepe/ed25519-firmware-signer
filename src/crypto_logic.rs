@@ -19,7 +19,6 @@ pub fn generate_key_pair_in_dir(output_dir: &std::path::Path) -> SigningKey {
     let mut rng = OsRng;
 
     let signing_key = SigningKey::generate(&mut rng);
-
     let public_key = signing_key.verifying_key();
 
     let private_key_filename = output_dir.join("signing_key.bin");
