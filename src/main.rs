@@ -3,64 +3,22 @@ use ed25519_dalek::{SigningKey, VerifyingKey, Signature};
 use std::path::PathBuf;
 // use std::io::Write; 
 
+mod cli_args; 
+
 mod basic_logic;
 mod read_files;
 mod key_management;
 
-#[cfg(test)]
-use clap::Subcommand;
-
-#[derive(Parser, Debug)]
-#[command(about = "Sign or verify firmware blobs using Ed25519", author, version)]
-struct Props {
-    /// Path to firmware binary
-    #[clap(short = 'f', long)]
-    path: Option<PathBuf>,
-
-    /// Path to private key for signing
-    #[clap(short = 's', long)]
-    signing_key: Option<PathBuf>,
-
-    /// Path to public key for verification
-    #[clap(short = 'p', long)]
-    public_key: Option<PathBuf>,
-
-    /// Path to store the generated signature
-    #[clap(short = 'o', long)]
-    signature: Option<PathBuf>,
-
-    /// Sign the firmware binary
-    #[clap(long)]
-    sign: bool,
-
-    /// Verify the firmware signature
-    #[clap(long)]
-    verify: bool,
-
-    #[cfg(test)]
-    #[clap(subcommand)]
-    command: Option<TestCommand>,
-}
-
-#[cfg(test)]
-#[derive(Subcommand, Debug)]
-enum TestCommand {
-    Test {
-        #[clap(long)]
-        t: String,
-    },
-}
-
 
 fn main() {
-    let args = Props::parse();
+    let args = cli_args::Props::parse();
 
     basic_logic::take_password_entry("firsttime".to_string());
     
     let base_dir: PathBuf = {
         #[cfg(test)]
         {
-            if let Some(TestCommand::Test { t }) = &args.command {
+            if let Some(cli_args::TestCommand::Test { t }) = &args.command {
                 PathBuf::from("test").join(t)
             } else {
                 std::env::current_dir().expect("Failed to get current working directory")

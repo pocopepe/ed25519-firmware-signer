@@ -6,6 +6,7 @@ use rand::RngCore;
 use std::io;
 use typenum::U12; 
 
+
 //keeping consistency using default consts
 const SALT_LEN: usize = 16;
 const NONCE_LEN: usize = 12; 
