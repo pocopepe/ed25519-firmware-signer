@@ -63,7 +63,6 @@ fn main() {
         match fs::write(&signature_filename, signature.to_bytes()) {
             Ok(_) => {
                 println!("Signature successfully saved to {}.", signature_filename.display());
-                println!("Exec Success");
             },
             Err(e) => eprintln!("Error saving signature to {}: {}", signature_filename.display(), e),
         }
@@ -111,7 +110,14 @@ fn main() {
 
         basic_logic::verifier(signature, &binary_data, verifying_key);
     }
-    else if !args.generate_keys { // Only enter this if --generate-keys wasn't explicitly used
+    else if args.generate_keys{
+        basic_logic::generate_key_pair_in_dir(&base_dir)
+            .unwrap_or_else(|e| {
+                eprintln!("Error generating key pair: {}", e);
+                std::process::exit(1);
+            });
+    }
+    else { // Only enter this if --generate-keys wasn't explicitly used
         println!("No specific action specified. Defaulting to key generation.");
         basic_logic::generate_key_pair_in_dir(&base_dir)
             .unwrap_or_else(|e| {

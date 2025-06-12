@@ -6,6 +6,8 @@ use rand::RngCore; // Needed for rng.fill_bytes
 use std::io;
 use typenum::U12; // For the 12-byte Nonce type
 
+//just a massive ai slop ahead
+
 // --- Constants for the encryption/decryption format ---
 // These are crucial and must match between encryption and decryption logic.
 const SALT_LEN: usize = 16;

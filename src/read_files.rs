@@ -10,11 +10,9 @@ pub fn read_firmware_data(path: &PathBuf) -> io::Result<Vec<u8>> {
 
     match extension.to_lowercase().as_str() {
         "bin" => {
-            println!("Reading binary file: {}", path.display());
             std::fs::read(path)
         },
         "hex" => {
-            println!("Reading Intel HEX file: {}", path.display());
             read_intel_hex_file(path)
         },
         _ => Err(io::Error::new(io::ErrorKind::InvalidInput,
@@ -123,4 +121,4 @@ fn hex_to_u8(s: &str) -> io::Result<u8> {
 fn hex_to_u16(s: &str) -> io::Result<u16> {
     u16::from_str_radix(s, 16)
         .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, format!("Failed to parse hex string '{}' to u16: {}", s, e)))
-}
+}   

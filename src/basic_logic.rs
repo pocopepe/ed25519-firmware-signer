@@ -2,12 +2,10 @@ use ed25519_dalek::{SigningKey, VerifyingKey, Signature, Signer, Verifier};
 use rand::rngs::OsRng;
 use std::io::{self, Write};
 use std::path::Path;
-use zeroize::Zeroize; // For securely clearing password from memory
+use zeroize::Zeroize;
 
-// Import password_crypto from the crate root
 use crate::password_crypto;
 
-// --- Helper for user password input ---
 pub fn take_password_entry(prompt_type: &str) -> io::Result<String> {
     loop {
         print!("Enter password for private key: ");
@@ -35,7 +33,6 @@ pub fn take_password_entry(prompt_type: &str) -> io::Result<String> {
                 if first_entry.is_empty() {
                     eprintln!("Password cannot be empty. Please try again.");
                 } else {
-                    println!("Password entered."); // More neutral message
                     return Ok(first_entry);
                 }
             },
@@ -47,14 +44,12 @@ pub fn take_password_entry(prompt_type: &str) -> io::Result<String> {
     }
 }
 
-// --- Public Function: Generate Key Pair (password-protected) ---
 pub fn generate_key_pair_in_dir(output_dir: &Path) -> io::Result<SigningKey> {
     let signing_key_path = output_dir.join("signing_key.bin");
     let public_key_path = output_dir.join("public_key.bin");
 
     if signing_key_path.exists() || public_key_path.exists() {
-        eprintln!("Warning: Existing '{}' or '{}' found in {}.",
-                  signing_key_path.display(), public_key_path.display(), output_dir.display());
+        eprintln!("Warning: Existing public and private key found in {}",output_dir.display());
         eprintln!("This command will overwrite existing keys, and the old keys cannot be retrieved.");
         print!("Are you sure you want to proceed? (y/n): ");
         io::stdout().flush()?;
@@ -89,7 +84,7 @@ pub fn generate_key_pair_in_dir(output_dir: &Path) -> io::Result<SigningKey> {
     std::fs::write(&public_key_path, public_key.to_bytes())?;
 
     println!("Key pair generated successfully.");
-    println!("Private key (encrypted) saved to: {}", signing_key_path.display());
+    println!("Private key saved to: {}", signing_key_path.display());
     println!("Public key saved to: {}", public_key_path.display());
 
     Ok(signing_key)
@@ -133,17 +128,14 @@ pub fn load_encrypted_signing_key(key_path: &Path) -> io::Result<SigningKey> {
     }
 }
 
-// --- Public Function: Sign Data ---
 pub fn sign(message: &[u8], signing_key: SigningKey) -> Signature {
-    signing_key.sign(message) // This will now work
+    signing_key.sign(message)
 }
 
-// --- Public Function: Verify Data ---
 pub fn verifier(signature: Signature, message: &[u8], public_key: VerifyingKey) {
-    match public_key.verify(message, &signature) { // This will now work
+    match public_key.verify(message, &signature) {
         Ok(_) => {
             println!("Signature verification successful!");
-            println!("Exec Success");
         },
         Err(e) => {
             eprintln!("Signature verification failed: {}", e);
