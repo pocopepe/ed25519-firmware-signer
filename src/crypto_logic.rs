@@ -3,7 +3,7 @@ use ed25519_dalek::{VerifyingKey, Verifier};
 use rand::rngs::OsRng;
 use std::io::{self, Write}; 
 
-pub fn get_password_for_keys()->String{
+pub fn take_password_entry()->String{
     loop {
         print!("Enter password for private key: ");
         std::io::stdout().flush().expect("Failed to flush stdout");
