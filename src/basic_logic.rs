@@ -1,7 +1,4 @@
-// src/basic_logic.rs
-
-// Add Signer and Verifier to the use statement for ed25519_dalek
-use ed25519_dalek::{SigningKey, VerifyingKey, Signature, Signer, Verifier}; // <--- ADDED Signer, Verifier
+use ed25519_dalek::{SigningKey, VerifyingKey, Signature, Signer, Verifier};
 use rand::rngs::OsRng;
 use std::io::{self, Write};
 use std::path::Path;
@@ -98,7 +95,6 @@ pub fn generate_key_pair_in_dir(output_dir: &Path) -> io::Result<SigningKey> {
     Ok(signing_key)
 }
 
-// --- Public Function: Load Encrypted Signing Key ---
 pub fn load_encrypted_signing_key(key_path: &Path) -> io::Result<SigningKey> {
     if !key_path.exists() {
         return Err(io::Error::new(io::ErrorKind::NotFound, format!("Key file not found: {}", key_path.display())));
@@ -115,8 +111,6 @@ pub fn load_encrypted_signing_key(key_path: &Path) -> io::Result<SigningKey> {
 
         match decrypted_bytes_result {
             Ok(decrypted_bytes) => {
-                // Constants like PRIVATE_KEY_LEN are defined in password_crypto,
-                // so we define a local const here to avoid direct import or re-exporting.
                 const EXPECTED_KEY_LEN: usize = 32;
                 if decrypted_bytes.len() != EXPECTED_KEY_LEN {
                     return Err(io::Error::new(io::ErrorKind::InvalidData, "Decrypted key has incorrect length. It might be corrupted or the wrong password was used."));

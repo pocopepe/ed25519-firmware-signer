@@ -1,5 +1,3 @@
-// src/password_crypto.rs
-
 use aes_gcm::{Aes256Gcm, Key};
 use aes_gcm::aead::{Aead, KeyInit};
 use argon2::{Argon2, Params, password_hash::{SaltString, rand_core::OsRng as KdfOsRng}};

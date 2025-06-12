@@ -1,5 +1,3 @@
-// src/main.rs
-
 use std::path::PathBuf;
 use std::fs;
 use clap::{Parser};

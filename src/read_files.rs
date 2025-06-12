@@ -1,5 +1,3 @@
-// src/read_files.rs
-
 use std::io::{self, BufReader, BufRead};
 use std::fs::File;
 use std::path::PathBuf;
