@@ -1,6 +1,6 @@
 [package]
 name = "binsign"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 authors = ["pocopepe <avijusanjai@gmail.com>"]
 description = "A command-line tool for signing firmware or other data using Ed25519."
