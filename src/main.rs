@@ -54,8 +54,7 @@ enum TestCommand {
 fn main() {
     let args = Props::parse();
 
-    let nothing= crypto_logic::take_password_entry();
-    print!("{:?}", nothing);
+    crypto_logic::take_password_entry("firsttime".to_string());
     
     let base_dir: PathBuf = {
         #[cfg(test)]

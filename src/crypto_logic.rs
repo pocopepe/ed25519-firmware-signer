@@ -2,28 +2,51 @@ use ed25519_dalek::{Signature, Signer, SigningKey};
 use ed25519_dalek::{VerifyingKey, Verifier};
 use rand::rngs::OsRng;
 use std::io::{self, Write}; 
+use rpassword;
 
-pub fn take_password_entry()->String{
-    loop {
-        print!("Enter password for private key: ");
-        std::io::stdout().flush().expect("Failed to flush stdout");
-        let first_entry: String = rpassword::read_password()
-            .expect("Failed to read password from stdin");
+pub fn take_password_entry(prompt_type: String) -> String {// maybe later convert prompt from string to a struct so that I can have auto fill on this
+    match prompt_type.as_str() { 
+        "firsttime" => { //used for first entry of the password
+            loop {
+                print!("Enter password for private key: ");
+                io::stdout().flush().expect("Failed to flush stdout");
+                let first_entry = rpassword::read_password()
+                    .expect("Failed to read password from stdin");
 
-        print!("Confirm password: ");
-        io::stdout().flush().expect("Failed to flush stdout");
-        let second_entry = rpassword::read_password()
-            .expect("Failed to read password from stdin");
+                print!("Confirm password: ");
+                io::stdout().flush().expect("Failed to flush stdout");
+                let second_entry = rpassword::read_password()
+                    .expect("Failed to read password from stdin");
 
-        if first_entry == second_entry {
-            if first_entry.is_empty() {
-                eprintln!("Password cannot be empty. Please try again.");
-            } else {
-                println!("Password confirmed.");
-                return first_entry;
+                if first_entry == second_entry {
+                    if first_entry.is_empty() {
+                        eprintln!("Password cannot be empty. Please try again.");
+                    } else {
+                        println!("Password confirmed.");
+                        return first_entry;
+                    }
+                } else {
+                    eprintln!("Passwords do not match. Please try again.");
+                }
             }
-        } else {
-            eprintln!("Passwords do not match. Please try again.");
+        },
+        "verify" => {// used for logic when password is entered to use the keys
+            loop {
+                print!("Enter password for private key: ");
+                io::stdout().flush().expect("Failed to flush stdout");
+                let entry = rpassword::read_password()
+                    .expect("Failed to read password from stdin");
+
+                if entry.is_empty() {
+                    eprintln!("Password cannot be empty. Please try again.");
+                } else {
+                    return entry;
+                }
+            }
+        },
+        _ => {
+            eprintln!("Error: The program has reached its end, try again");
+            std::process::exit(1);
         }
     }
 }
