@@ -1,10 +1,8 @@
 use std::io::{self, BufReader, BufRead};
 use std::fs::File;
 use std::path::PathBuf;
-use hex; // Make sure `hex = "0.4"` is in your Cargo.toml
+use hex; 
 
-
-/// Reads firmware data from a file, handling .bin and .hex extensions.
 pub fn read_firmware_data(path: &PathBuf) -> io::Result<Vec<u8>> {
     let extension = path.extension()
                         .and_then(|s| s.to_str())
@@ -24,13 +22,11 @@ pub fn read_firmware_data(path: &PathBuf) -> io::Result<Vec<u8>> {
     }
 }
 
-/// Reads an Intel HEX file and converts its data into a raw byte vector.
-/// This is a simplified parser and might not handle all edge cases of the Intel HEX format.
 fn read_intel_hex_file(path: &PathBuf) -> io::Result<Vec<u8>> {
     let file = File::open(path)?;
     let reader = BufReader::new(file);
     let mut binary_data = Vec::new();
-    let mut current_address: u64 = 0; // keeps track of where the pointer's at
+    let mut current_address: u64 = 0;
 
     for (line_num, line_result) in reader.lines().enumerate() {
         let line = line_result?;
@@ -42,7 +38,7 @@ fn read_intel_hex_file(path: &PathBuf) -> io::Result<Vec<u8>> {
                                        format!("Line {} does not start with ':' in {}: {}", line_num + 1, path.display(), line)));
         }
 
-        let record = &line[1..]; //removes the :
+        let record = &line[1..]; 
 
         // 2 (byte count) + 4 (address) + 2 (record type) + 2 (checksum)
         if record.len() < 10 {
