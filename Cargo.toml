@@ -12,6 +12,7 @@ keywords = ["firmware", "signing", "cryptography", "ed25519", "cli"]
 categories = ["command-line-utilities", "cryptography::cryptosystems"]
 
 [dependencies]
+aes-gcm = "0.10.3"
 clap = { version = "4.5.39", features = ["derive"] }
 ed25519-dalek = { version = "2.1.1", features = ["rand_core"] }
 hex = "0.4"
