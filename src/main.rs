@@ -3,7 +3,7 @@ use ed25519_dalek::{SigningKey, VerifyingKey, Signature};
 use std::path::PathBuf;
 // use std::io::Write; 
 
-mod crypto_logic;
+mod basic_logic;
 mod read_files;
 
 #[cfg(test)]
@@ -54,7 +54,7 @@ enum TestCommand {
 fn main() {
     let args = Props::parse();
 
-    crypto_logic::take_password_entry("firsttime".to_string());
+    basic_logic::take_password_entry("firsttime".to_string());
     
     let base_dir: PathBuf = {
         #[cfg(test)]
@@ -103,11 +103,11 @@ fn main() {
                 SigningKey::from_bytes(&bytes.try_into().expect("Invalid key length (expected 32 bytes)"))
             } else {
                 println!("No signing key specified and 'signing_key.bin' not found. Generating a new key pair...");
-                crypto_logic::generate_key_pair_in_dir(&base_dir)
+                basic_logic::generate_key_pair_in_dir(&base_dir)
             }
         };
 
-        let signature: Signature = crypto_logic::sign(&binary_data, signing_key.clone());
+        let signature: Signature = basic_logic::sign(&binary_data, signing_key.clone());
 
         let signature_filename = base_dir.join("firmware.sig");
         let signature_bytes = signature.to_bytes();
@@ -174,7 +174,7 @@ fn main() {
         let signature_bytes = std::fs::read(&signature_path)
             .expect(&format!("Failed to read signature from {:?}", signature_path));
         let signature = Signature::from_bytes(&signature_bytes.try_into().expect("Invalid signature length (expected 64 bytes)"));
-        crypto_logic::verifier(signature, &binary_data, verifying_key);
+        basic_logic::verifier(signature, &binary_data, verifying_key);
     }
 
     // Generate keys logic, if everything falls through
@@ -196,7 +196,7 @@ fn main() {
 
     //             if confirmation == "y" || confirmation == "yes" {
     //                 println!("Overwriting existing keys...");
-    //                 crypto_logic::generate_key_pair_in_dir(&base_dir);
+    //                 basic_logic::generate_key_pair_in_dir(&base_dir);
     //             } else {
     //                 println!("Key generation cancelled.");
     //             }
@@ -214,7 +214,7 @@ fn main() {
     //         }
     //     } else {
     //         println!("No existing 'signing_key.bin' found. Generating a new key pair...");
-    //         crypto_logic::generate_key_pair_in_dir(&base_dir);
+    //         basic_logic::generate_key_pair_in_dir(&base_dir);
     //     }
     // }
 }

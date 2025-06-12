@@ -1,34 +1,8 @@
-use aes_gcm::aead::consts::U12;
 use ed25519_dalek::{Signature, Signer, SigningKey};
 use ed25519_dalek::{VerifyingKey, Verifier};
 use rand::rngs::OsRng;
 use std::io::{self, Write}; 
 use rpassword;
-use aes_gcm::{Aes256Gcm, Key}; // Only import Aes256Gcm and Key
-use aes_gcm::aead::{Aead, KeyInit}; // Traits for AEAD operations
-use aes_gcm::Nonce;
-use rand::RngCore;
-
-
-
-
-pub fn encrypt_with_aes_gcm(
-    data_to_encrypt: &[u8],
-    aes_encryption_key: &Key<Aes256Gcm>,
-    rng: &mut OsRng,
-) -> io::Result<(Vec<u8>, aes_gcm::Nonce<U12>)> { // <--- Fix 1: Specify the exact Nonce type
-    let cipher = Aes256Gcm::new(aes_encryption_key);
-    let mut nonce_bytes = [0u8; 12]; // You could use NONCE_LEN here: [0u8; NONCE_LEN]
-    rng.fill_bytes(&mut nonce_bytes);
-    let nonce = aes_gcm::Nonce::<U12>::from_slice(&nonce_bytes); // <--- Fix 2: Specify the Nonce type
-
-    let ciphertext = cipher.encrypt(nonce, data_to_encrypt)
-        .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("AES-GCM encryption failed: {}", e)))?;
-
-    Ok((ciphertext, *nonce))
-}
-
-
 
 pub fn take_password_entry(prompt_type: String) -> String {// maybe later convert prompt from string to a struct so that I can have auto fill on this
     match prompt_type.as_str() { 
