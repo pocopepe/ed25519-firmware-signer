@@ -5,6 +5,7 @@ use std::path::PathBuf;
 
 mod basic_logic;
 mod read_files;
+mod key_management;
 
 #[cfg(test)]
 use clap::Subcommand;
