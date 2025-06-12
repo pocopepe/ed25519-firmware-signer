@@ -54,6 +54,9 @@ enum TestCommand {
 fn main() {
     let args = Props::parse();
 
+    let nothing= crypto_logic::get_password_for_keys();
+    print!("{:?}", nothing);
+    
     let base_dir: PathBuf = {
         #[cfg(test)]
         {
@@ -89,7 +92,6 @@ fn main() {
                 eprintln!("Error reading firmware from {:?}: {}", binary_path, e);
                 std::process::exit(1);
             });
-
 
         let signing_key = if let Some(key_path) = args.signing_key.as_deref() {
             let bytes = std::fs::read(key_path).expect("Failed to read key file");
@@ -177,43 +179,43 @@ fn main() {
     }
 
     // Generate keys logic, if everything falls through
-    else  {
-        let private_key_path = base_dir.join("signing_key.bin");
-        let public_key_path = base_dir.join("public_key.bin");
+    // else  {
+    //     let private_key_path = base_dir.join("signing_key.bin");
+    //     let public_key_path = base_dir.join("public_key.bin");
 
-        if private_key_path.exists() {
-            if public_key_path.exists() {
-                eprintln!("Warning: Existing '{}' and '{}' found in {}.",
-                          private_key_path.display(), public_key_path.display(), base_dir.display());
-                eprintln!("Ths command will overwrite existing keys, and the old keys cannot be retrieved.");
-                eprint!("Are you sure you want to proceed? (y/n): ");
-                std::io::stdout().flush().expect("Failed to flush stdout");
+    //     if private_key_path.exists() {
+    //         if public_key_path.exists() {
+    //             eprintln!("Warning: Existing '{}' and '{}' found in {}.",
+    //                       private_key_path.display(), public_key_path.display(), base_dir.display());
+    //             eprintln!("Ths command will overwrite existing keys, and the old keys cannot be retrieved.");
+    //             eprint!("Are you sure you want to proceed? (y/n): ");
+    //             std::io::stdout().flush().expect("Failed to flush stdout");
 
-                let mut input = String::new();
-                std::io::stdin().read_line(&mut input).expect("Failed to read line");
-                let confirmation = input.trim().to_lowercase();
+    //             let mut input = String::new();
+    //             std::io::stdin().read_line(&mut input).expect("Failed to read line");
+    //             let confirmation = input.trim().to_lowercase();
 
-                if confirmation == "y" || confirmation == "yes" {
-                    println!("Overwriting existing keys...");
-                    crypto_logic::generate_key_pair_in_dir(&base_dir);
-                } else {
-                    println!("Key generation cancelled.");
-                }
-            } else {
-                println!("'signing_key.bin' found but 'public_key.bin' is missing. Regenerating public key from existing private key...");
-                let private_key_bytes = std::fs::read(&private_key_path)
-                    .expect(&format!("Failed to read private key from {:?}", private_key_path));
-                let signing_key = SigningKey::from_bytes(&private_key_bytes.try_into().expect("Invalid private key length (expected 32 bytes)"));
-                let public_key = signing_key.verifying_key();
+    //             if confirmation == "y" || confirmation == "yes" {
+    //                 println!("Overwriting existing keys...");
+    //                 crypto_logic::generate_key_pair_in_dir(&base_dir);
+    //             } else {
+    //                 println!("Key generation cancelled.");
+    //             }
+    //         } else {
+    //             println!("'signing_key.bin' found but 'public_key.bin' is missing. Regenerating public key from existing private key...");
+    //             let private_key_bytes = std::fs::read(&private_key_path)
+    //                 .expect(&format!("Failed to read private key from {:?}", private_key_path));
+    //             let signing_key = SigningKey::from_bytes(&private_key_bytes.try_into().expect("Invalid private key length (expected 32 bytes)"));
+    //             let public_key = signing_key.verifying_key();
 
-                match std::fs::write(&public_key_path, public_key.to_bytes()) {
-                    Ok(_) => println!("Public key successfully regenerated and saved to {}.", public_key_path.display()),
-                    Err(e) => eprintln!("Error saving public key to {}: {}", public_key_path.display(), e),
-                }
-            }
-        } else {
-            println!("No existing 'signing_key.bin' found. Generating a new key pair...");
-            crypto_logic::generate_key_pair_in_dir(&base_dir);
-        }
-    }
+    //             match std::fs::write(&public_key_path, public_key.to_bytes()) {
+    //                 Ok(_) => println!("Public key successfully regenerated and saved to {}.", public_key_path.display()),
+    //                 Err(e) => eprintln!("Error saving public key to {}: {}", public_key_path.display(), e),
+    //             }
+    //         }
+    //     } else {
+    //         println!("No existing 'signing_key.bin' found. Generating a new key pair...");
+    //         crypto_logic::generate_key_pair_in_dir(&base_dir);
+    //     }
+    // }
 }
