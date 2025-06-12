@@ -1,8 +1,3 @@
-# Makefile.toml
-
-[config]
-name = "binsign"
-
 [tasks.build-release]
 description = "Builds the release binary for the native system."
 command = "cargo"
@@ -43,13 +38,16 @@ script = '''
     # Create a directory for bundled releases if it doesn't exist
     mkdir -p target/release/dist
 
-    WIN_EXE_PATH="target/x86_64-pc-windows-msvc/release/{{bin_name}}.exe"
-    ZIP_FILE="target/release/dist/{{bin_name}}-x86_64-windows.zip"
+    # Path to the compiled Windows executable
+    WIN_EXE_PATH="target/x86_64-pc-windows-msvc/release/{{CARGO_PKG_NAME}}.exe" # <-- Use CARGO_PKG_NAME
+    # Destination ZIP file name
+    ZIP_FILE="target/release/dist/{{CARGO_PKG_NAME}}-x86_64-windows.zip"     # <-- Use CARGO_PKG_NAME
 
     zip -j "${ZIP_FILE}" "${WIN_EXE_PATH}"
 
     echo "Windows bundle created: ${ZIP_FILE}"
 '''
+
 
 [tasks.bump-patch]
 description = "Bumps the patch version (e.g., 0.2.0 -> 0.2.1), creates Git tag, and commits."
