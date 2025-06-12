@@ -1,7 +1,7 @@
 # Makefile.toml
 
 [config]
-bin_name = "binsign"
+name = "binsign"
 
 [tasks.build-release]
 description = "Builds the release binary for the native system."
@@ -43,32 +43,28 @@ script = '''
     # Create a directory for bundled releases if it doesn't exist
     mkdir -p target/release/dist
 
-    WIN_EXE_PATH="target/x86_64-pc-windows-msvc/release/{{config.bin_name}}.exe"
-    ZIP_FILE="target/release/dist/{{config.bin_name}}-x86_64-windows.zip"
+    WIN_EXE_PATH="target/x86_64-pc-windows-msvc/release/{{bin_name}}.exe"
+    ZIP_FILE="target/release/dist/{{bin_name}}-x86_64-windows.zip"
 
     zip -j "${ZIP_FILE}" "${WIN_EXE_PATH}"
 
     echo "Windows bundle created: ${ZIP_FILE}"
 '''
 
-# --- NEW: Specific Version Bumping Tasks ---
-# These tasks only handle the version bump, commit, and tag.
-
 [tasks.bump-patch]
 description = "Bumps the patch version (e.g., 0.2.0 -> 0.2.1), creates Git tag, and commits."
 command = "cargo"
-args = ["release", "patch", "--no-publish"]
+args = ["release", "patch", "--no-publish", "--execute"] # <--- ADD --execute
 
 [tasks.bump-minor]
 description = "Bumps the minor version (e.g., 0.2.0 -> 0.3.0), creates Git tag, and commits."
 command = "cargo"
-args = ["release", "minor", "--no-publish"]
+args = ["release", "minor", "--no-publish", "--execute"] # <--- ADD --execute
 
 [tasks.bump-major]
 description = "Bumps the major version (e.g., 0.2.0 -> 1.0.0), creates Git tag, and commits."
 command = "cargo"
-args = ["release", "major", "--no-publish"]
-
+args = ["release", "major", "--no-publish", "--execute"] # <--- ADD --execute
 
 [tasks.release-patch]
 description = "Performs a full PATCH release: bumps patch, builds, and packages for multiple platforms."
