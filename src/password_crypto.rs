@@ -84,58 +84,28 @@ fn perform_aes_gcm_decryption(
     Ok(decrypted_bytes)
 }
 
-// --- Public Function: Encrypt with Password ---
-/// Encrypts a private key (or any byte slice) using a password.
-///
-/// This function uses Argon2id for key derivation and AES-256-GCM for authenticated encryption.
-/// It generates a random salt and a random nonce internally.
-///
-/// # Arguments
-/// * `private_key_bytes` - The raw byte slice of the private key to be encrypted.
-/// * `password` - The user's password as a string.
-///
-/// # Returns
-/// A `Result` containing a tuple `(salt_bytes: Vec<u8>, nonce_bytes: Vec<u8>, ciphertext_with_tag: Vec<u8>)`
-/// if successful, or an `io::Error` otherwise.
-/// These three parts should be stored together (e.g., concatenated) for later decryption.
+
 pub fn encrypt_with_password(
     private_key_bytes: &[u8],
     password: &str,
 ) -> io::Result<(Vec<u8>, Vec<u8>, Vec<u8>)> {
-    let mut rng = OsRng; // Random number generator for salt and nonce
+    let mut rng = OsRng;
 
-    // 1. Generate random salt
     let mut salt_bytes = [0u8; SALT_LEN];
-    KdfOsRng.fill_bytes(&mut salt_bytes); // KdfOsRng is used for Argon2 salt generation
+    KdfOsRng.fill_bytes(&mut salt_bytes); 
 
-    // 2. Derive AES encryption key from password and salt
     let aes_encryption_key = derive_aes_key(password, &salt_bytes)?;
 
-    // 3. Perform AES-GCM encryption
     let (ciphertext_with_tag, nonce) = perform_aes_gcm_encryption(
         private_key_bytes,
         &aes_encryption_key,
         &mut rng,
     )?;
 
-    // Return the salt, nonce, and ciphertext (with tag) as separate Vec<u8> for storage
     Ok((salt_bytes.to_vec(), nonce.to_vec(), ciphertext_with_tag))
 }
 
 
-// --- Public Function: Decrypt with Password ---
-/// Decrypts encrypted data (private key bytes) using a password.
-///
-/// This function expects the data to be in the format: `[SALT_LEN bytes] || [NONCE_LEN bytes] || [CIPHERTEXT + TAG bytes]`.
-/// It uses Argon2id for key derivation and AES-256-GCM for authenticated decryption.
-///
-/// # Arguments
-/// * `encrypted_data_from_file` - The complete byte slice read from the encrypted key file.
-/// * `password` - The user's password as a string.
-///
-/// # Returns
-/// A `Result` containing the decrypted private key bytes (`Vec<u8>`) if successful,
-/// or an `io::Error` otherwise (e.g., incorrect password, corrupted data).
 pub fn decrypt_with_password(
     encrypted_data_from_file: &[u8],
     password: &str,
