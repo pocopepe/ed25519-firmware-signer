@@ -118,13 +118,26 @@ fn main() {
                 std::process::exit(1);
             });
     }
-    else { // Only enter this if --generate-keys wasn't explicitly used
-        // println!("No specific action specified. Defaulting to key generation.");
-        // basic_logic::generate_key_pair_in_dir(&base_dir)
-        //     .unwrap_or_else(|e| {
-        //         eprintln!("Error generating key pair: {}", e);
-        //         std::process::exit(1);
-        //     });
-        let _=git::print_latest_commit_hash();
+    else if args.generate_keys{
+        basic_logic::generate_key_pair_in_dir(&base_dir)
+            .unwrap_or_else(|e| {
+                eprintln!("Error generating key pair: {}", e);
+                std::process::exit(1);
+            });
     }
+    else if args.init {
+    println!("Initializing project at current directory");
+    }
+
+    else if let Some(commit_hash) = args.switch.as_ref() {
+        println!("Switching to commit {}", commit_hash);
+    }
+    else if let Some(history_count_str) = args.history.as_ref() {
+        let count = history_count_str.parse::<u32>().unwrap_or(10);
+        println!("Showing last {} commits:", count);
+    }
+    else {
+        println!("No action specified.\nUse --help to see available options.");
+    }
+
 }

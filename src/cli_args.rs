@@ -7,6 +7,18 @@ use clap::Subcommand;
 #[derive(Parser, Debug)]
 #[command(about = "Sign or verify firmware blobs using Ed25519", author, version)]
 pub struct Props {
+    /// Initialize your project folder
+    #[clap(short = 'i', long)]
+    pub init: bool,
+
+    /// Switch across commit history by commit hash
+    #[clap(long)]
+    pub switch: Option<String>,
+
+    /// Get last N commit history (number as string)
+    #[clap(long)]
+    pub history: Option<String>,
+
     /// Path to firmware binary or Intel HEX file to sign or verify.
     #[clap(short = 'f', long)]
     pub path: Option<PathBuf>,
