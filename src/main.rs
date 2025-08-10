@@ -7,6 +7,7 @@ mod cli_args;
 mod basic_logic;
 mod read_files;
 mod password_crypto;
+mod git;
 
 fn main() {
     let args: cli_args::Props = cli_args::Props::parse();
@@ -118,11 +119,12 @@ fn main() {
             });
     }
     else { // Only enter this if --generate-keys wasn't explicitly used
-        println!("No specific action specified. Defaulting to key generation.");
-        basic_logic::generate_key_pair_in_dir(&base_dir)
-            .unwrap_or_else(|e| {
-                eprintln!("Error generating key pair: {}", e);
-                std::process::exit(1);
-            });
+        // println!("No specific action specified. Defaulting to key generation.");
+        // basic_logic::generate_key_pair_in_dir(&base_dir)
+        //     .unwrap_or_else(|e| {
+        //         eprintln!("Error generating key pair: {}", e);
+        //         std::process::exit(1);
+        //     });
+        let _=git::print_latest_commit_hash();
     }
 }
