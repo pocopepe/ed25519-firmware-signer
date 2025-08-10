@@ -17,7 +17,7 @@ pub struct Props {
 
     /// Get last N commit history (number as string)
     #[clap(long)]
-    pub history: Option<String>,
+    pub history: Option<Option<u32>>,
 
     /// Path to firmware binary or Intel HEX file to sign or verify.
     #[clap(short = 'f', long)]

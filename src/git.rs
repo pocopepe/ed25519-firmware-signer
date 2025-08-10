@@ -1,21 +1,32 @@
-use git2::{Error, Repository};
+use git2::{Error, Repository,};
+use std::time::{UNIX_EPOCH, Duration};
+use chrono::{DateTime, Local};
 
-pub fn _print_latest_commit_hash() -> Result<(), Error> {
+pub fn print_latest_n_commits(n: u32) -> Result<(), Error> {
     let repo = Repository::discover(".")?;
-    let head = repo.head()?;
-    let commit = head.peel_to_commit()?;
-
     let mut revwalk = repo.revwalk()?;
     revwalk.push_head()?;
+    revwalk.set_sorting(git2::Sort::TIME)?;
 
-    let count = revwalk.count();
+    let mut count = 0;
+    for oid_result in revwalk {
+        if count >= n {
+            break;
+        }
+        let oid = oid_result?;
+        let commit = repo.find_commit(oid)?;
 
-    println!("Latest commit hash: {}", commit.id());
-    println!("Commit message: {}", commit.message().unwrap_or("<no message>"));
-    println!("number of commits: {}", count);
+        let timestamp = commit.time().seconds();
+        let datetime = UNIX_EPOCH + Duration::from_secs(timestamp as u64);
+        let datetime: DateTime<Local> = DateTime::from(datetime);
 
+        println!(" Author: {}", commit.author());
+        println!("  Hash: {}", commit.id());
+        println!("  Date: {}", datetime.format("%Y-%m-%d %H:%M:%S"));
+        println!("  Message: {}", commit.message().unwrap_or("<no message>"));
+        println!();
+
+        count += 1;
+    }
     Ok(())
 }
-
-
-
