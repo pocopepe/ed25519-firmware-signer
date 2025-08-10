@@ -9,7 +9,7 @@ mod read_files;
 mod password_crypto;
 
 fn main() {
-    let args = cli_args::Props::parse();
+    let args: cli_args::Props = cli_args::Props::parse();
 
     let base_dir: PathBuf = {
         #[cfg(test)]
@@ -116,6 +116,16 @@ fn main() {
                 eprintln!("Error generating key pair: {}", e);
                 std::process::exit(1);
             });
+    }
+    else if args.init {
+        let fwmeta_path = base_dir.join(".fwmeta");
+        if fwmeta_path.exists() {
+            println!(".fwmeta already exists in {}", base_dir.display());
+        } else {
+            fs::write(&fwmeta_path, "version: 1\nhistory: []\n")
+                .expect("Failed to create .fwmeta file");
+            println!("Initialized new .fwmeta in {}", base_dir.display());
+        }
     }
     else { // Only enter this if --generate-keys wasn't explicitly used
         println!("No specific action specified. Defaulting to key generation.");
