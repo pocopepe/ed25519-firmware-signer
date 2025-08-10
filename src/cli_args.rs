@@ -7,10 +7,6 @@ use clap::Subcommand;
 #[derive(Parser, Debug)]
 #[command(about = "Sign or verify firmware blobs using Ed25519", author, version)]
 pub struct Props {
-    //to initialize a proj
-    #[clap(short = 'i', long)]
-    pub init: bool,
-
     /// Path to firmware binary or Intel HEX file to sign or verify.
     #[clap(short = 'f', long)]
     pub path: Option<PathBuf>,
