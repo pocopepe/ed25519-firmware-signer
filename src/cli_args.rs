@@ -15,7 +15,7 @@ pub struct Props {
     #[clap(long)]
     pub switch: Option<String>,
 
-    /// Get last N commit history (number as string)
+    /// Get last N commit history, defaults to the last 5 commits
     #[clap(long)]
     pub history: Option<Option<u32>>,
 
