@@ -1,7 +1,7 @@
 use clap::Parser;
 use std::path::PathBuf;
 
-#[cfg(test)] 
+#[cfg(test)]
 use clap::Subcommand;
 
 #[derive(Parser, Debug)]
@@ -47,6 +47,15 @@ pub struct Props {
     #[clap(long)]
     pub generate_keys: bool,
 
+    /// Track firmware changes: compares SHA-256 against the manifest history, signs if changed,
+    /// and appends a new entry to the manifest JSON. Requires --path and --signing-key.
+    #[clap(long)]
+    pub track: bool,
+
+    /// Path to the manifest JSON file used with --track or --verify.
+    /// Defaults to '<firmware_stem>.manifest.json' in the current directory.
+    #[clap(long)]
+    pub manifest: Option<PathBuf>,
 
     #[cfg(test)]
     #[clap(subcommand)]

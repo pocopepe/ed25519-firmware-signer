@@ -1,6 +1,6 @@
-use git2::{Error, Repository,};
-use std::time::{UNIX_EPOCH, Duration};
 use chrono::{DateTime, Local};
+use git2::{Error, Repository};
+use std::time::{Duration, UNIX_EPOCH};
 
 pub fn print_latest_n_commits(n: u32) -> Result<(), Error> {
     let repo = Repository::discover(".")?;
