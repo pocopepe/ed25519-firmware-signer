@@ -1,46 +1,8 @@
-[package]
-name = "binsign"
-version = "1.0.0"
-edition = "2021"
-authors = ["pocopepe <avijusanjai@gmail.com>"]
-description = "A command-line tool for signing firmware or other data using Ed25519."
-readme = "README.md"
-homepage = "https://github.com/pocopepe/ed25519-firmware-signer"
-repository = "https://github.com/pocopepe/ed25519-firmware-signer"
-license = "MIT"
-keywords = ["firmware", "signing", "cryptography", "ed25519", "cli"]
-categories = ["command-line-utilities", "cryptography::cryptosystems"]
-
-[dependencies]
-aes-gcm = "0.10.3"
-argon2 = "0.5.3"
-chrono = "0.4.41"
-clap = { version = "4.5.39", features = ["derive"] }
-ed25519-dalek = { version = "2.1.1", features = ["rand_core"] }
-git2 = "0.20.2"
-hex = "0.4"
-rand = "0.8.5"
-rpassword = "7.4.0"
-typenum = "1.18.0"
-zeroize = { version = "1.7", features = ["std"] }
-
-
-[features]
-default=[]
-
-[package.metadata.deb]
-maintainer = "pocopepe <avijusanjai@gmail.com>"
-copyright = "2024, pocopepe <avijusanjai@gmail.com>"
-license-file = ["LICENSE", "21"]
-extended-description = """\
-A command-line tool for signing firmware or other data using Ed25519.
-It provides functionalities for key generation, signing binary data,
-and verifying signatures, ensuring the integrity and authenticity of firmware updates."""
-depends = "$auto"
-section = "utility"
-priority = "optional"
-assets = [
-    ["target/release/binsign", "usr/bin/", "755"],
-    { source = "README.md", dest = "usr/share/doc/binsign/README.md", mode = "644"},
-    { source = "LICENSE", dest = "usr/share/doc/binsign/LICENSE", mode = "644"},
+[workspace]
+members = [
+    "binsign",
+    "binsign-core",
+    "binsign-ui",
 ]
+exclude = ["fuzz"]
+resolver = "2"
