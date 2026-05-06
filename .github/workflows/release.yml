@@ -60,9 +60,14 @@ jobs:
           key: ${{ matrix.name }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Build release binary
+        env:
+          OPENSSL_STATIC: 1
         run: |
           if [[ "${{ matrix.target }}" == "aarch64-unknown-linux-gnu" ]]; then
             cross build --release --target ${{ matrix.target }}
+          elif [[ "${{ matrix.target }}" == "x86_64-unknown-linux-gnu" ]]; then
+            # Build native on ubuntu-latest for cargo-deb compatibility
+            cargo build -p binsign --release
           else
             cargo build --release --target ${{ matrix.target }}
           fi
@@ -75,7 +80,12 @@ jobs:
           if [[ "${{ matrix.artifact }}" == *.exe ]]; then
             output_name="${output_name}.exe"
           fi
-          cp "target/${{ matrix.target }}/release/${{ matrix.artifact }}" "dist/${output_name}"
+          # For x86_64 linux, binary is in target/release/ (native build)
+          if [[ "${{ matrix.target }}" == "x86_64-unknown-linux-gnu" ]]; then
+            cp "target/release/${{ matrix.artifact }}" "dist/${output_name}"
+          else
+            cp "target/${{ matrix.target }}/release/${{ matrix.artifact }}" "dist/${output_name}"
+          fi
         shell: bash
 
       - name: Upload artifact
