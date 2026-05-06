@@ -46,8 +46,8 @@ impl FirmwareManifest {
     }
 
     pub fn save(&self, path: &Path) -> io::Result<()> {
-        let json = serde_json::to_string_pretty(self)
-            .map_err(|e| io::Error::other(e.to_string()))?;
+        let json =
+            serde_json::to_string_pretty(self).map_err(|e| io::Error::other(e.to_string()))?;
         std::fs::write(path, json)
     }
 
