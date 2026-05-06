@@ -24,13 +24,12 @@ jobs:
             runs_on: ubuntu-latest
             target: aarch64-unknown-linux-gnu
             artifact: binsign
-            linker: gcc-aarch64-linux-gnu
           - name: macos-aarch64
             runs_on: macos-14
             target: aarch64-apple-darwin
             artifact: binsign
           - name: macos-x86_64
-            runs_on: macos-14
+            runs_on: macos-13
             target: x86_64-apple-darwin
             artifact: binsign
           - name: windows-x86_64
@@ -46,21 +45,9 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
-      - name: Install cross-compilation toolchain
-        if: matrix.linker != ''
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ${{ matrix.linker }}
-        shell: bash
-
-      - name: Configure cross-linker
-        if: matrix.linker != ''
-        run: |
-          mkdir -p .cargo
-          cat >> .cargo/config.toml << 'EOF'
-          [target.aarch64-unknown-linux-gnu]
-          linker = "aarch64-linux-gnu-gcc"
-          EOF
+      - name: Install cross for aarch64 Linux
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: cargo install cross
         shell: bash
 
       - name: Cache cargo registry
@@ -73,7 +60,12 @@ jobs:
           key: ${{ matrix.name }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Build release binary
-        run: cargo build -p binsign --release --target ${{ matrix.target }}
+        run: |
+          if [[ "${{ matrix.target }}" == "aarch64-unknown-linux-gnu" ]]; then
+            cross build --release --target ${{ matrix.target }}
+          else
+            cargo build --release --target ${{ matrix.target }}
+          fi
         shell: bash
 
       - name: Stage artifact
