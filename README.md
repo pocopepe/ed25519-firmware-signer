@@ -1,6 +1,6 @@
 # ed25519-firmware-signer
 
-A robust command-line utility for signing and verifying firmware binaries using the Ed25519 cryptographic algorithm. Designed for integrity verification in embedded systems and secure boot processes.
+A Rust toolchain for signing, verifying, and tracking firmware binaries using Ed25519. The repository now includes both a CLI and a lightweight desktop UI for the same core operations.
 
 -----
 
@@ -9,6 +9,11 @@ A robust command-line utility for signing and verifying firmware binaries using 
   * **Key Pair Generation:** Securely generate Ed25519 signing (private) and public key pairs. Includes checks to prevent accidental overwrites of existing keys.
   * **Firmware Signing:** Create Ed25519 signatures for binary firmware files.
   * **Signature Verification:** Validate firmware binaries against their corresponding signatures and public keys.
+  * **Firmware Tracking:** Append signed manifest entries when firmware changes are detected.
+  * **Desktop UI:** A simple cross-platform egui app for browsing files, entering passwords, and running the signing flow without the terminal.
+  * **Drag-and-Drop UI:** The desktop app supports dragging files directly onto the interface—no need to click "Browse" every time.
+  * **Debian Packages:** Linux users on x86_64 can install via native .deb packages for easier updates and uninstallation.
+  * **Multi-Platform Binaries:** Pre-built releases for Linux (x86_64, aarch64), macOS (x86_64, aarch64), and Windows (x86_64).
   * **Flexible Path Handling:** Supports explicit path specification for firmware, keys, and signatures, along with intelligent defaults.
   * **Dedicated Test Mode:** Provides a specialized mode for managing and executing test scenarios within a structured directory layout.
 
@@ -18,35 +23,59 @@ A robust command-line utility for signing and verifying firmware binaries using 
 
 To build and install `ed25519-firmware-signer`, you'll need the [Rust programming language](https://www.rust-lang.org/tools/install) and its package manager, Cargo.
 
+### Local build
+
 1.  **Clone the repository:**
 
     ```bash
-    git clone https://github.com/your-username/ed25519-firmware-signer.git
+    git clone https://github.com/pocopepe/ed25519-firmware-signer.git
     cd ed25519-firmware-signer
     ```
 
-2.  **Build the project:**
+2.  **Build the CLI:**
 
     ```bash
-    cargo build --release
+    cargo build --release -p binsign
     ```
 
     The compiled executable will be located at `target/release/binsign`.
 
-3.  **Adding to PATH (Linux):**
-    For system-wide access, you can move the `binsign` executable to a directory already included in your system's `PATH`, such as `/usr/local/bin`.
+3.  **Build the desktop UI:**
 
     ```bash
-    sudo mv target/release/binsign /usr/local/bin/
+    cargo run -p binsign-ui
     ```
 
-    After moving, you should be able to run `binsign` from any directory in your terminal. You can test this by typing `binsign --help`.
+### Fast install from a release
+
+For Linux and macOS, you can install the latest release:
+
+**On Linux (x86_64 with .deb support):**
+```bash
+curl -fsSL https://raw.githubusercontent.com/pocopepe/ed25519-firmware-signer/main/scripts/install.sh | sh
+```
+This will prefer the native .deb package if available and `sudo` is configured. Otherwise, it falls back to the binary.
+
+**On Linux (aarch64) or macOS:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/pocopepe/ed25519-firmware-signer/main/scripts/install.sh | sh
+```
+
+If you want a specific location, set `INSTALL_DIR` first:
+
+```bash
+INSTALL_DIR=$HOME/.local/bin curl -fsSL https://raw.githubusercontent.com/pocopepe/ed25519-firmware-signer/main/scripts/install.sh | sh
+```
+
+The installer automatically detects your OS and architecture, downloading the matching release artifact.
 
 -----
 
 ## Usage
 
-`binsign` is a command-line tool with distinct operations (key generation, signing, verification) and arguments.
+`binsign` is a command-line tool with distinct operations (key generation, signing, verification, and firmware tracking) and arguments.
+
+The UI exposes the same signing and verification flow with file pickers and password fields.
 
 ### General Command Structure
 
