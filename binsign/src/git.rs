@@ -8,9 +8,8 @@ pub fn print_latest_n_commits(n: u32) -> Result<(), Error> {
     revwalk.push_head()?;
     revwalk.set_sorting(git2::Sort::TIME)?;
 
-    let mut count = 0;
-    for oid_result in revwalk {
-        if count >= n {
+    for (count, oid_result) in revwalk.enumerate() {
+        if count >= n as usize {
             break;
         }
         let oid = oid_result?;
@@ -25,8 +24,6 @@ pub fn print_latest_n_commits(n: u32) -> Result<(), Error> {
         println!("  Date: {}", datetime.format("%Y-%m-%d %H:%M:%S"));
         println!("  Message: {}", commit.message().unwrap_or("<no message>"));
         println!();
-
-        count += 1;
     }
     Ok(())
 }

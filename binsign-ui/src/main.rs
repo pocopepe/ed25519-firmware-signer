@@ -295,7 +295,7 @@ impl eframe::App for BinsignApp {
             ui.spacing_mut().item_spacing = egui::vec2(12.0, 10.0);
 
             // Drag-and-drop hint
-            if ctx.input(|i| i.raw.hovered_files.is_empty() == false) {
+            if ctx.input(|i| !i.raw.hovered_files.is_empty()) {
                 ui.colored_label(egui::Color32::LIGHT_BLUE, "📁 Drop files here");
             }
 
