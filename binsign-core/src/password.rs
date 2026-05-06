@@ -22,7 +22,7 @@ fn derive_key(password: &str, salt: &[u8]) -> io::Result<Key<Aes256Gcm>> {
         .unwrap_or(1);
 
     let params = Params::new(1024 * 6, 2, parallelism, Some(KEY_LEN))
-        .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?;
+        .map_err(|e| io::Error::other(e.to_string()))?;
 
     let argon2 = Argon2::new(argon2::Algorithm::Argon2id, argon2::Version::V0x13, params);
 
@@ -33,7 +33,7 @@ fn derive_key(password: &str, salt: &[u8]) -> io::Result<Key<Aes256Gcm>> {
             salt_string.as_str().as_bytes(),
             &mut key_bytes,
         )
-        .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?;
+        .map_err(|e| io::Error::other(e.to_string()))?;
 
     Ok(*Key::<Aes256Gcm>::from_slice(&key_bytes))
 }
@@ -54,7 +54,7 @@ pub fn encrypt_with_password(
     let key = derive_key(password, &salt)?;
     let ciphertext = Aes256Gcm::new(&key)
         .encrypt(nonce, plaintext)
-        .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?;
+        .map_err(|e| io::Error::other(e.to_string()))?;
 
     Ok((salt.to_vec(), nonce.to_vec(), ciphertext))
 }
