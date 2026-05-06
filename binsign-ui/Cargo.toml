@@ -1,0 +1,13 @@
+[package]
+name = "binsign-ui"
+version = "1.0.0"
+edition = "2021"
+authors = ["pocopepe <avijusanjai@gmail.com>"]
+description = "A desktop UI for signing and verifying firmware with binsign."
+license = "MIT"
+
+[dependencies]
+binsign-core = { path = "../binsign-core" }
+eframe = { version = "0.27.2", default-features = true, features = ["default_fonts"] }
+rfd = "0.14.1"
+ed25519-dalek = { version = "2.1.1", features = ["rand_core"] }
