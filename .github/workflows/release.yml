@@ -1,0 +1,126 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build ${{ matrix.name }}
+    runs-on: ${{ matrix.runs_on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-x86_64
+            runs_on: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact: binsign
+          - name: linux-aarch64
+            runs_on: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            artifact: binsign
+            linker: gcc-aarch64-linux-gnu
+          - name: macos-aarch64
+            runs_on: macos-14
+            target: aarch64-apple-darwin
+            artifact: binsign
+          - name: macos-x86_64
+            runs_on: macos-14
+            target: x86_64-apple-darwin
+            artifact: binsign
+          - name: windows-x86_64
+            runs_on: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact: binsign.exe
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install cross-compilation toolchain
+        if: matrix.linker != ''
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ${{ matrix.linker }}
+        shell: bash
+
+      - name: Configure cross-linker
+        if: matrix.linker != ''
+        run: |
+          mkdir -p .cargo
+          cat >> .cargo/config.toml << 'EOF'
+          [target.aarch64-unknown-linux-gnu]
+          linker = "aarch64-linux-gnu-gcc"
+          EOF
+        shell: bash
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ matrix.name }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build release binary
+        run: cargo build -p binsign --release --target ${{ matrix.target }}
+        shell: bash
+
+      - name: Stage artifact
+        run: |
+          mkdir -p dist
+          output_name="binsign-${GITHUB_REF_NAME}-${{ matrix.target }}"
+          if [[ "${{ matrix.artifact }}" == *.exe ]]; then
+            output_name="${output_name}.exe"
+          fi
+          cp "target/${{ matrix.target }}/release/${{ matrix.artifact }}" "dist/${output_name}"
+        shell: bash
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: binsign-${{ matrix.target }}
+          path: dist/
+
+      - name: Build .deb package
+        if: matrix.name == 'linux-x86_64'
+        run: |
+          cargo install cargo-deb
+          cargo deb -p binsign --target x86_64-unknown-linux-gnu
+          cp target/x86_64-unknown-linux-gnu/debian/*.deb dist/ || true
+        shell: bash
+
+      - name: Upload .deb artifact
+        if: matrix.name == 'linux-x86_64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: binsign-deb
+          path: dist/*.deb
+
+  release:
+    name: Publish GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true
