@@ -208,10 +208,16 @@ cargo run --features test_mode -- -v t my_project_test_case
 
 ## Contributing
 
-Contributions are welcome\! Please feel free to open issues or submit pull requests.
+Contributions are welcome! Please feel free to open issues or submit pull requests.
+
+-----
+
+## Desktop UI
+
+The UI lives in [binsign-ui/](binsign-ui/) and can be launched locally with `cargo run -p binsign-ui`.
 
 -----
 
 ## License
 
-This project is licensed under the [MIT License](https://www.google.com/search?q=LICENSE) - see the `LICENSE` file for details.
+This project is licensed under the [MIT License](LICENSE) - see the `LICENSE` file for details.
